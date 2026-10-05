@@ -60,4 +60,4 @@ npm run deploy
 
 Workers Buildsではproduction branchを`main`、build commandを`npm run build`、deploy commandを`npx wrangler deploy`に設定します。初回のCloudflare・GitHub認証と権限承認はアカウント所有者が行います。
 
-既存Worksサイトへの掲載は公開後にWagtail CMSから行い、利用URLとして `https://resume.nuconeko-garden.com/` を登録します。
+[Works](https://nuconeko-garden.com/works/)に掲載済みです。利用URLは `https://resume.nuconeko-garden.com/` です。
