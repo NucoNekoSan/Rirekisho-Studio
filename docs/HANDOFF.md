@@ -36,8 +36,20 @@
 - 本環境にWord・Excel・LibreOfficeはなく、Office実機での改ページ・印刷結果は未確認。OOXML構造とブラウザ保存の検証結果を実機目視確認と混同しない。
 - Word・Excelをアプリへ読み戻す機能はない。再編集用にJSONを保存する。
 - スクリーンリーダーによる実機手動QAは未実施。
+- ExcelJSの圧縮済みチャンクは約940kB。ビルドのサイズ警告は残るが、出力処理は遅延読込し、PWAでオフライン出力用にプリキャッシュする。
 - 未追跡の`.claude/`は今回の統合・配布対象外。
 
 ## 本番反映記録
 
-検証済み統合をGitHubへ反映後、対象コミット・配備バージョン・公開確認結果を追記する。
+- 統合PR: [#1](https://github.com/NucoNekoSan/Rirekisho-Studio/pull/1)（2026-10-09 17:29 JSTにマージ）。
+- 検証済み統合コミット: `3a5a37a04a32099a9a68fa48e13394c3fc70986b`。
+- mainのマージコミット／配備対象: `c33c6db542c8cc505c33cf36c8f8fe884844cdec`。
+- マージ後の公開サイトは旧成果物だったため、認証済みWranglerで手動配備。`npm run deploy -- --tag c33c6db --message "Final handoff: main c33c6db542c8cc505c33cf36c8f8fe884844cdec"`が成功。
+- Cloudflare Worker: `rirekisho-studio`。配備バージョン: `954120fa-d579-438e-9425-5fe81ba73263`。カスタムドメイン `resume.nuconeko-garden.com` に反映。
+- 配備後、公開する全37ファイル（配信ヘッダー設定ファイル`_headers`を除く）がローカルの`dist/`とバイト単位で一致。HTML、全JS/CSS、Service Worker、マニュアル、アイコン、sitemapを照合。
+- `/`、`/app`、`/manual/`、`/privacy`、`/terms`はHTTP 200。CSPとページ表示を確認し、未処理JavaScript例外なし。
+- 公開サイトでA4・A3それぞれのPDF・Word・Excel、合計6ファイルを実際に保存。PDFヘッダーとOffice ZIPヘッダー、ファイルサイズを確認。
+- 長文ダイアログの編集・Escape・フォーカス復帰、同意後のIndexedDB保存と再読込、マニュアル第5章・編集画面への戻り導線を確認。
+- 配備前に開いていたPWAで更新通知を確認。「更新する」で新バージョンへ切り替わり、更新後のマニュアルがオフラインで表示できることを確認。
+- 390px／1440pxの公開トップページを目視確認。モバイルで横スクロールなし。
+- マニュアル作成日は公開成果物で`2026年10月9日`。今回の本番反映記録だけの後続コミットは、上記配備対象のアプリ・公開資産を変更しない。
