@@ -1,7 +1,8 @@
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import type { TextAlignment } from '../lib/types';
 import type { SectionStatus } from '../lib/sectionStatus';
+import { applyTextLengthLimit } from '../lib/textInput';
 
 type GuidanceText = string | string[];
 
@@ -181,6 +182,7 @@ export function TextArea({
   showAlignmentControl = false,
   maxLength,
   error,
+  onExpand,
 }: {
   label: string;
   value: string;
@@ -193,7 +195,9 @@ export function TextArea({
   showAlignmentControl?: boolean;
   maxLength?: number;
   error?: string;
+  onExpand?: (textarea: HTMLTextAreaElement) => void;
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const textareaId = useId();
   const hintId = `${textareaId}-hint`;
   const guidanceId = `${textareaId}-guidance`;
@@ -206,26 +210,13 @@ export function TextArea({
     error ? errorId : '',
   ].filter(Boolean).join(' ') || undefined;
 
-  const handleChange = (nextValue: string) => {
-    if (!maxLength || nextValue.length <= maxLength) {
-      onChange(nextValue);
-      return;
-    }
-
-    // 旧形式の保存データなど、すでに上限を超えている文章は失わず、
-    // 上限へ戻すために文字数を減らす編集だけを許可する。
-    if (value.length > maxLength) {
-      if (nextValue.length < value.length) onChange(nextValue);
-      return;
-    }
-
-    onChange(nextValue.slice(0, maxLength));
-  };
+  const handleChange = (nextValue: string) => onChange(applyTextLengthLimit(value, nextValue, maxLength));
 
   return (
     <div className="field aligned-field">
       <label htmlFor={textareaId}>{label}</label>
       <textarea
+        ref={textareaRef}
         id={textareaId}
         value={value}
         maxLength={maxLength}
@@ -235,8 +226,20 @@ export function TextArea({
         placeholder={placeholder}
         style={{ textAlign: alignment }}
         onChange={(event) => handleChange(event.target.value)}
+        onClick={onExpand ? (event) => onExpand(event.currentTarget) : undefined}
+        aria-haspopup={onExpand ? 'dialog' : undefined}
         rows={5}
       />
+      {onExpand ? (
+        <button
+          type="button"
+          className="secondary compact-button text-area-expand-button"
+          aria-label={`${label}を大きく編集`}
+          onClick={() => textareaRef.current && onExpand(textareaRef.current)}
+        >
+          大きく編集
+        </button>
+      ) : null}
       {maxLength ? (
         <span id={countId} className={`field-character-count${error ? ' over-limit' : ''}`}>
           {value.length} / {maxLength}文字

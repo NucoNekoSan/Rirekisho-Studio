@@ -8,10 +8,17 @@
   <script src="manual.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#content">本文へスキップ</a>
   <header class="page-header">
-    <h1>Rirekisho Studio マニュアル</h1>
+    <div class="header-main">
+      <h1>Rirekisho Studio マニュアル</h1>
+      <nav class="return-nav" aria-label="Rirekisho Studioへ戻る">
+        <a href="https://resume.nuconeko-garden.com/">トップへ戻る</a>
+        <a class="primary-action" href="https://resume.nuconeko-garden.com/app">履歴書作成画面へ戻る</a>
+      </nav>
+    </div>
     <nav id="nav" aria-label="マニュアルの章"></nav>
   </header>
-  <main id="content" aria-live="polite">読み込み中…</main>
+  <main id="content" tabindex="-1" aria-live="polite">読み込み中…</main>
 </body>
 </html>

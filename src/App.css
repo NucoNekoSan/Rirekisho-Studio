@@ -183,6 +183,17 @@ button.ghost-danger:disabled { background: var(--color-danger); }
   letter-spacing: 0;
 }
 
+.app-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.app-header nav a {
+  color: var(--color-primary);
+}
+
 .header-copy {
   margin: 8px 0 0;
   color: var(--color-text-muted);
@@ -449,6 +460,10 @@ button.ghost-danger:disabled { background: var(--color-danger); }
 .field-character-count.over-limit {
   color: var(--color-danger-dark);
   font-weight: 700;
+}
+
+.text-area-expand-button {
+  justify-self: end;
 }
 
 .field-guidance {
@@ -1527,8 +1542,69 @@ select:user-invalid {
 }
 
 .confirm-dialog::backdrop,
-.preview-dialog::backdrop {
+.preview-dialog::backdrop,
+.expanded-text-dialog::backdrop {
   background: var(--backdrop-color);
+}
+
+.expanded-text-dialog {
+  width: min(94vw, 900px);
+  max-height: 92vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 0;
+  color: var(--color-text-body);
+  box-shadow: var(--shadow-dialog);
+}
+
+.expanded-text-dialog form {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: 92vh;
+}
+
+.expanded-text-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  padding: 18px 20px;
+}
+
+.expanded-text-dialog-header h2,
+.expanded-text-dialog-header p {
+  margin: 0;
+}
+
+.expanded-text-dialog-header h2 {
+  font-size: 1.25rem;
+}
+
+.expanded-text-dialog-header p {
+  margin-top: 6px;
+  color: var(--color-text-subtle);
+  line-height: 1.6;
+}
+
+.expanded-text-dialog-body {
+  display: grid;
+  min-height: 0;
+  padding: 20px;
+}
+
+.expanded-text-dialog-body label {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.expanded-text-dialog-body textarea {
+  width: 100%;
+  min-height: min(54vh, 520px);
+  padding: 14px;
+  font: inherit;
+  line-height: 1.8;
 }
 
 .confirm-dialog form {
@@ -1654,6 +1730,25 @@ select:user-invalid {
   }
   .preview-dialog-body {
     padding: 12px;
+  }
+
+  .expanded-text-dialog-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .expanded-text-dialog-header button {
+    align-self: flex-end;
+  }
+
+  .expanded-text-dialog-body {
+    padding: 16px;
+  }
+
+  .expanded-text-dialog-body textarea {
+    min-height: 50vh;
   }
 }
 

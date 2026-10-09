@@ -139,6 +139,26 @@ describe('App accessibility labels', () => {
     );
   });
 
+  it('opens a large editor for long text and reflects edits immediately', async () => {
+    render(<App />);
+
+    const motivation = screen.getByLabelText('志望動機');
+    expect(screen.getByRole('button', { name: '志望動機を大きく編集' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '自己PRを大きく編集' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '作業メモを大きく編集' })).toBeInTheDocument();
+
+    fireEvent.click(motivation);
+
+    const dialog = await screen.findByRole('dialog', { name: '志望動機を大きく編集' });
+    const expandedEditor = within(dialog).getByRole('textbox', { name: '志望動機' });
+    expect(expandedEditor).toHaveAttribute('maxlength', '350');
+
+    fireEvent.change(expandedEditor, { target: { value: '文章全体を確認しながら編集' } });
+
+    expect(motivation).toHaveValue('文章全体を確認しながら編集');
+    expect(within(dialog).getByText('13 / 350文字')).toBeInTheDocument();
+  });
+
   it('keeps legacy over-limit text, blocks PDF output, and allows reducing it to the limit', async () => {
     const state = createDefaultState();
     state.resume.selfPr = '自'.repeat(432);
@@ -382,7 +402,7 @@ describe('App accessibility labels', () => {
     expect(screen.getByText('作業メモはPDFに出力しません。')).toBeInTheDocument();
     expect(screen.getByText('追加書類が無効のため、配慮事項シートは出力しません。')).toBeInTheDocument();
     expect(screen.queryByText('配慮事項シートはA4縦形式で出力します。')).not.toBeInTheDocument();
-    expect(screen.getByText('右側のPDFプレビューで内容を確認し、PDFを表示・保存してください。')).toBeInTheDocument();
+    expect(screen.getByText('右側のPDFプレビューで内容を確認し、PDF・Word・Excelを保存できます。Word・Excelは編集できますが、印刷前にページ配置を確認してください。')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: '履歴書PDFを表示' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: '履歴書PDFを保存' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: '履歴書+配慮事項PDFを表示' })).not.toBeInTheDocument();

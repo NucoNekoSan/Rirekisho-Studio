@@ -22,6 +22,22 @@ body {
   line-height: 1.75;
 }
 
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  transform: translateY(-160%);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--accent);
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
 main {
   max-width: 880px;
   margin: 0 auto;
@@ -35,10 +51,15 @@ header.page-header {
   border-bottom: 1px solid var(--border);
   padding: 10px 24px;
   z-index: 10;
+  display: grid;
+  gap: 12px;
+}
+
+.header-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
 }
 
 header.page-header h1 {
@@ -53,6 +74,10 @@ header.page-header nav {
   flex-wrap: wrap;
 }
 
+header.page-header .return-nav { justify-content: flex-end; }
+header.page-header .return-nav .primary-action { background: var(--accent); color: #fff; }
+header.page-header #nav { padding-top: 10px; border-top: 1px solid var(--border); }
+
 header.page-header a {
   color: var(--accent);
   text-decoration: none;
@@ -66,6 +91,11 @@ header.page-header a {
 
 header.page-header a:hover { background: var(--accent-soft); }
 header.page-header a.current { background: var(--accent); color: #fff; }
+header.page-header a:focus-visible,
+main a:focus-visible {
+  outline: 3px solid #d7a84d;
+  outline-offset: 2px;
+}
 
 h1, h2, h3, h4 { color: var(--accent); line-height: 1.4; }
 h1 { font-size: 1.85rem; margin-top: 0; }
@@ -159,5 +189,14 @@ pre code { background: transparent; color: inherit; padding: 0; }
 }
 
 @media print {
-  header.page-header { position: static; }
+  header.page-header { display: none; }
+}
+
+@media (max-width: 700px) {
+  header.page-header { position: static; padding: 12px 16px; }
+  .header-main { align-items: stretch; flex-direction: column; }
+  header.page-header .return-nav { justify-content: flex-start; }
+  header.page-header .return-nav a { flex: 1 1 180px; text-align: center; }
+  header.page-header #nav { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+  header.page-header #nav a { flex: 0 0 auto; }
 }

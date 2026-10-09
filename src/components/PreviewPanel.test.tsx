@@ -8,6 +8,7 @@ describe('PreviewPanel', () => {
     const setPreviewPage = vi.fn();
     const onOpenPreviewDialog = vi.fn();
     const runPdfAction = vi.fn();
+    const runOfficeAction = vi.fn();
 
     render(
       <PreviewPanel
@@ -21,10 +22,12 @@ describe('PreviewPanel', () => {
         previewA4PageCount={1}
         showAccommodationButtons
         isGeneratingPdf={false}
+        isGeneratingOffice={false}
         isPdfOutputBlocked={false}
         pdfOutputBlockReason=""
         onOpenPreviewDialog={onOpenPreviewDialog}
         runPdfAction={runPdfAction}
+        runOfficeAction={runOfficeAction}
         previewPaperClass="preview-paper-a3-landscape"
         previewPagesRef={{ current: null }}
         previewFrameHeight={420}
@@ -42,6 +45,10 @@ describe('PreviewPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: '履歴書PDFを保存' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書+配慮事項PDFを表示' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書+配慮事項PDFを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: '履歴書Wordを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: '履歴書Excelを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: '履歴書+配慮事項Wordを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: '履歴書+配慮事項Excelを保存' }));
 
     expect(setPreviewScale).toHaveBeenNthCalledWith(1, 'fit');
     expect(setPreviewScale).toHaveBeenNthCalledWith(2, 'large');
@@ -53,6 +60,9 @@ describe('PreviewPanel', () => {
       ['download', false],
       ['open', true],
       ['download', true],
+    ]);
+    expect(runOfficeAction.mock.calls).toEqual([
+      ['docx', false], ['xlsx', false], ['docx', true], ['xlsx', true],
     ]);
     expect(screen.getByText('履歴書プレビュー')).toBeInTheDocument();
     expect(screen.getByText('PDF保存時は、この表示内容をA3横 1ページとして出力します。')).toBeInTheDocument();
@@ -71,10 +81,12 @@ describe('PreviewPanel', () => {
         previewA4PageCount={null}
         showAccommodationButtons={false}
         isGeneratingPdf
+        isGeneratingOffice={false}
         isPdfOutputBlocked={false}
         pdfOutputBlockReason=""
         onOpenPreviewDialog={vi.fn()}
         runPdfAction={vi.fn()}
+        runOfficeAction={vi.fn()}
         previewPaperClass="preview-paper-a4-portrait"
         previewPagesRef={{ current: null }}
         previewFrameHeight={null}
@@ -102,10 +114,12 @@ describe('PreviewPanel', () => {
         previewA4PageCount={2}
         showAccommodationButtons
         isGeneratingPdf={false}
+        isGeneratingOffice={false}
         isPdfOutputBlocked
         pdfOutputBlockReason="A4縦2ページに収まりません。"
         onOpenPreviewDialog={vi.fn()}
         runPdfAction={vi.fn()}
+        runOfficeAction={vi.fn()}
         previewPaperClass="preview-paper-a4-portrait"
         previewPagesRef={{ current: null }}
         previewFrameHeight={null}

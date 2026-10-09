@@ -15,6 +15,7 @@ import { createDefaultState, createDisabilityEmploymentDemoState } from './lib/d
 import { downloadPdfFromElements, openPdfFromElements, type PdfSourceElement } from './browser/pdfRenderer';
 import { processPhotoFile, rotatePhotoClockwise } from './browser/photoLoader';
 import { downloadTextFile } from './browser/downloadFile';
+import type { OfficeFormat } from './browser/officeRenderer';
 import { buildAccommodationPrintPages, buildResumePrintPages } from './lib/printPagination';
 import { parseProjectFileDocument, serializeProjectFile } from './lib/projectFile';
 import { resumeRepository } from './lib/resumeRepository';
@@ -23,6 +24,8 @@ import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useGridKeyboardNav } from './hooks/useGridKeyboardNav';
 import { useResumeEditor } from './hooks/useResumeEditor';
 import { getResumeSectionStatus, sectionStatusClass, type SectionStatus } from './lib/sectionStatus';
+import { applyTextLengthLimit } from './lib/textInput';
+import { sitePath } from './lib/sitePath';
 import type { LocalStorageConsent, PdfPaperFormat, ResumeDocumentMetadata } from './lib/types';
 
 /** 左メニューに表示するセクション一覧（表示順＝この配列の順序） */
@@ -33,11 +36,18 @@ const sections = [
   { id: 'license', label: '免許・資格' },
   { id: 'appeal', label: '志望動機・希望' },
   { id: 'accommodation', label: '配慮事項' },
-  { id: 'output', label: '保存・PDF' },
+  { id: 'output', label: '保存・出力' },
 ] as const;
 
 type SectionId = (typeof sections)[number]['id'];
 type PostalLookupTarget = 'primary' | 'contact';
+type ExpandedTextField = 'motivation' | 'selfPr' | 'memo';
+
+const expandedTextFieldDetails: Record<ExpandedTextField, { label: string; maxLength?: number; description: string }> = {
+  motivation: { label: '志望動機', maxLength: RESUME_APPEAL_MAX_LENGTH, description: '応募先で働きたい理由を、文章全体を見ながら編集できます。' },
+  selfPr: { label: '自己PR', maxLength: RESUME_APPEAL_MAX_LENGTH, description: '得意なことや取り組んできたことを、文章全体を見ながら編集できます。' },
+  memo: { label: '作業メモ', description: 'PDFには出力されない自分用のメモを、文章全体を見ながら編集できます。' },
+};
 
 const pdfPaperLabel = (format: PdfPaperFormat) => (format === 'a3-landscape' ? 'A3横' : 'A4縦');
 const A4_PDF_OUTPUT_BLOCK_MESSAGE = '現在の入力量はA4縦2ページに収まらないため、PDFを表示・保存できません。内容を短くするか、A3横を選択してください。';
@@ -76,6 +86,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingOffice, setIsGeneratingOffice] = useState(false);
   const [storageConsent, setStorageConsent] = useState<LocalStorageConsent>(() =>
     localStorage.getItem('rirekisho-studio:storage-consent') === 'device-storage' ? 'device-storage' : 'memory-only');
   const [documentId, setDocumentId] = useState<string>(() => crypto.randomUUID());
@@ -90,6 +101,7 @@ function App() {
   const [previewFrameHeight, setPreviewFrameHeight] = useState<number | null>(null);
   const [previewA4PageCount, setPreviewA4PageCount] = useState<number | null>(null);
   const [visibleFormattingSections, setVisibleFormattingSections] = useState<Partial<Record<SectionId, boolean>>>({});
+  const [expandedTextField, setExpandedTextField] = useState<ExpandedTextField | null>(null);
 
   // --- DOM参照（PDF出力用の隠しDOM要素とダイアログ） ---
   const exportResumeRef = useRef<HTMLElement | null>(null);
@@ -98,6 +110,8 @@ function App() {
   const previewContentRef = useRef<HTMLElement | null>(null);
   const clearDialogRef = useRef<HTMLDialogElement | null>(null);
   const previewDialogRef = useRef<HTMLDialogElement | null>(null);
+  const expandedTextDialogRef = useRef<HTMLDialogElement | null>(null);
+  const expandedTextOriginRef = useRef<HTMLTextAreaElement | null>(null);
 
   // --- 派生値（stateから算出されるUI表示用の値） ---
   const accommodationFields = useMemo(() => getAccommodationPrintFields(accommodation), [accommodation]);
@@ -118,6 +132,28 @@ function App() {
   const isPdfOutputBlocked = Boolean(resumeAppealLengthWarning) || resumeA4PageWarning;
   const pdfOutputBlockReason = resumeAppealLengthWarning || A4_PDF_OUTPUT_BLOCK_MESSAGE;
   const calculatedAge = calculateAgeFromDateInput(resume.basic.birthDate, new Date());
+  const expandedTextDetails = expandedTextField ? expandedTextFieldDetails[expandedTextField] : null;
+  const expandedTextValue = expandedTextField ? resume[expandedTextField] : '';
+
+  const openExpandedTextEditor = (field: ExpandedTextField, origin: HTMLTextAreaElement) => {
+    expandedTextOriginRef.current = origin;
+    setExpandedTextField(field);
+  };
+
+  const handleExpandedTextDialogClose = () => {
+    setExpandedTextField(null);
+    const origin = expandedTextOriginRef.current;
+    expandedTextOriginRef.current = null;
+    requestAnimationFrame(() => origin?.focus());
+  };
+
+  useEffect(() => {
+    if (!expandedTextField) return;
+    const dialog = expandedTextDialogRef.current;
+    if (!dialog || dialog.open) return;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }, [expandedTextField]);
 
   // --- 郵便番号→住所自動検索 ---
   const primaryLookup = usePostalLookup({
@@ -418,6 +454,20 @@ function App() {
     }
   };
 
+  const runOfficeAction = async (format: OfficeFormat, includeAccommodation: boolean) => {
+    setIsGeneratingOffice(true);
+    setErrorMessage('');
+    try {
+      const { downloadOfficeDocument } = await import('./browser/officeRenderer');
+      await downloadOfficeDocument(format, resume, accommodation, includeAccommodation);
+      setStatusMessage(`${format === 'docx' ? 'Word' : 'Excel'}ファイルを保存しました。`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'ファイルを生成できませんでした。');
+    } finally {
+      setIsGeneratingOffice(false);
+    }
+  };
+
   const openPreviewDialog = () => {
     previewDialogRef.current?.showModal();
   };
@@ -439,9 +489,14 @@ function App() {
       <a className="skip-link" href="#main-content">入力フォームへスキップ</a>
       <header className="app-header">
         <div>
-          <h1><a className="app-brand" href="/">Rirekisho Studio</a></h1>
+          <h1><a className="app-brand" href={sitePath('')}>Rirekisho Studio</a></h1>
           <p className="header-copy">日本向けの履歴書を、端末の中だけで安全に作成できます。</p>
         </div>
+        <nav aria-label="サービス情報">
+          <a href={sitePath('manual/')}>使い方</a>
+          <a href={sitePath('privacy')}>プライバシー</a>
+          <a href={sitePath('terms')}>利用規約</a>
+        </nav>
       </header>
 
       <main id="main-content" className="workspace" tabIndex={-1}>
@@ -613,10 +668,10 @@ function App() {
               onToggleFormatting={() => toggleFormattingSection('appeal')}
             >
               <div className="form-grid two" onKeyDown={gridKeyDown}>
-                <TextArea label="志望動機" value={resume.motivation} onChange={(value) => updateResumeField('motivation', value)} hint="応募先で働きたい理由を書きます（350文字以内）。" guidance="PDFに出力される欄です。応募先に見せる内容だけを書きます。" placeholder="応募先で働きたい理由や活かせる経験" maxLength={RESUME_APPEAL_MAX_LENGTH} error={motivationLengthError} showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.motivation')} />
-                <TextArea label="自己PR" value={resume.selfPr} onChange={(value) => updateResumeField('selfPr', value)} hint="得意なこと、取り組んできたことを書きます（350文字以内）。" guidance="PDFに出力される欄です。得意なことや続けてきたことを書きます。" placeholder="得意なこと、続けて取り組んできたこと" maxLength={RESUME_APPEAL_MAX_LENGTH} error={selfPrLengthError} showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.selfPr')} />
+                <TextArea label="志望動機" value={resume.motivation} onChange={(value) => updateResumeField('motivation', value)} onExpand={(origin) => openExpandedTextEditor('motivation', origin)} hint="応募先で働きたい理由を書きます（350文字以内）。" guidance="PDFに出力される欄です。応募先に見せる内容だけを書きます。" placeholder="応募先で働きたい理由や活かせる経験" maxLength={RESUME_APPEAL_MAX_LENGTH} error={motivationLengthError} showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.motivation')} />
+                <TextArea label="自己PR" value={resume.selfPr} onChange={(value) => updateResumeField('selfPr', value)} onExpand={(origin) => openExpandedTextEditor('selfPr', origin)} hint="得意なこと、取り組んできたことを書きます（350文字以内）。" guidance="PDFに出力される欄です。得意なことや続けてきたことを書きます。" placeholder="得意なこと、続けて取り組んできたこと" maxLength={RESUME_APPEAL_MAX_LENGTH} error={selfPrLengthError} showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.selfPr')} />
                 <TextArea label="本人希望欄" value={resume.requests} onChange={(value) => updateResumeField('requests', value)} hint="勤務条件などの希望がある場合に記入します。特にない場合は「貴社規定に従います。」など。" guidance="PDFに出力される欄です。応募先へ伝える内容だけを書きます。" placeholder="貴社規定に従います" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.requests')} />
-                <TextArea label="作業メモ" value={resume.memo} onChange={(value) => updateResumeField('memo', value)} hint="下書きや確認事項のためのメモ欄です（PDFには出ません）。" guidance="このメモはPDFに出力されません。面接前の確認や下書きに使えます。" placeholder="面接前に確認したいこと" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.memo')} />
+                <TextArea label="作業メモ" value={resume.memo} onChange={(value) => updateResumeField('memo', value)} onExpand={(origin) => openExpandedTextEditor('memo', origin)} hint="下書きや確認事項のためのメモ欄です（PDFには出ません）。" guidance="このメモはPDFに出力されません。面接前の確認や下書きに使えます。" placeholder="面接前に確認したいこと" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.memo')} />
                 <TextField label="通勤時間" value={resume.commuteTime} onChange={(value) => updateResumeField('commuteTime', value)} placeholder="約45分" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.commuteTime')} />
                 <TextField label="扶養家族" value={resume.dependents} onChange={(value) => updateResumeField('dependents', value)} placeholder="0人" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.dependents')} />
                 <TextField label="配偶者" value={resume.spouse} onChange={(value) => updateResumeField('spouse', value)} placeholder="無" showAlignmentControl={appealFormattingVisible} {...resumeAlignmentProps('resume.spouse')} />
@@ -657,7 +712,7 @@ function App() {
               )}
           </FormSection>
 
-          <FormSection id="output" title="保存・PDF出力" description="サーバーには保存しません。必要な場合は入力データをダウンロードしてください。">
+          <FormSection id="output" title="保存・ファイル出力" description="サーバーには保存しません。必要な場合は入力データをダウンロードしてください。">
               <OutputPanel
                 resume={resume}
                 accommodation={accommodation}
@@ -691,10 +746,12 @@ function App() {
           previewA4PageCount={previewA4PageCount}
           showAccommodationButtons={hasAccommodation}
           isGeneratingPdf={isGeneratingPdf}
+          isGeneratingOffice={isGeneratingOffice}
           isPdfOutputBlocked={isPdfOutputBlocked}
           pdfOutputBlockReason={pdfOutputBlockReason}
           onOpenPreviewDialog={openPreviewDialog}
           runPdfAction={runPdfAction}
+          runOfficeAction={runOfficeAction}
           previewPaperClass={previewPaperClass}
           previewPagesRef={previewPagesRef}
           previewFrameHeight={previewFrameHeight}
@@ -725,6 +782,42 @@ function App() {
             ) : (
               <AccommodationPage accommodation={accommodation} eraMode={resume.eraMode} pdfFontFamily={resume.pdfFontFamily} />
             )}
+          </div>
+        </form>
+      </dialog>
+
+      <dialog
+        className="expanded-text-dialog"
+        ref={expandedTextDialogRef}
+        aria-labelledby="expanded-text-dialog-title"
+        aria-describedby="expanded-text-dialog-description"
+        onClose={handleExpandedTextDialogClose}
+      >
+        <form method="dialog">
+          <div className="expanded-text-dialog-header">
+            <div>
+              <h2 id="expanded-text-dialog-title">{expandedTextDetails ? `${expandedTextDetails.label}を大きく編集` : '文章を大きく編集'}</h2>
+              <p id="expanded-text-dialog-description">{expandedTextDetails?.description}</p>
+            </div>
+            <button type="submit" className="secondary">閉じる</button>
+          </div>
+          <div className="expanded-text-dialog-body">
+            <label htmlFor="expanded-text-editor">{expandedTextDetails?.label ?? '文章'}</label>
+            <textarea
+              id="expanded-text-editor"
+              autoFocus
+              value={expandedTextValue}
+              maxLength={expandedTextDetails?.maxLength}
+              onChange={(event) => {
+                if (!expandedTextField) return;
+                updateResumeField(expandedTextField, applyTextLengthLimit(expandedTextValue, event.target.value, expandedTextDetails?.maxLength));
+              }}
+            />
+            <span className="field-character-count" aria-live="polite">
+              {expandedTextDetails?.maxLength
+                ? `${expandedTextValue.length} / ${expandedTextDetails.maxLength}文字`
+                : `${expandedTextValue.length}文字`}
+            </span>
           </div>
         </form>
       </dialog>

@@ -42,7 +42,14 @@ for (const directive of [
 }
 if (!wrangler.includes('"not_found_handling": "single-page-application"')) failures.push('Wrangler SPA fallback is missing');
 if (!wrangler.includes('resume.nuconeko-garden.com')) failures.push('Wrangler custom domain is missing');
-if (!(await read(path.join('dist', 'sitemap.xml'))).includes('https://resume.nuconeko-garden.com/')) failures.push('canonical sitemap is missing');
+const builtIndex = await read(path.join('dist', 'index.html'));
+const sitemap = await read(path.join('dist', 'sitemap.xml'));
+if (!builtIndex.includes('<title>Rirekisho Studio｜無料の履歴書作成アプリ</title>')) failures.push('branded page title is missing');
+if (!builtIndex.includes('<link rel="canonical" href="https://resume.nuconeko-garden.com/"')) failures.push('homepage canonical is missing');
+if (!builtIndex.includes('<h1>Rirekisho Studio｜無料の履歴書作成アプリ</h1>')) failures.push('crawlable homepage heading is missing');
+if (!builtIndex.includes('href="/app"')) failures.push('crawlable editor link is missing');
+if (!sitemap.includes('<loc>https://resume.nuconeko-garden.com/</loc>')) failures.push('canonical sitemap is missing');
+if (sitemap.includes('<loc>https://resume.nuconeko-garden.com/app</loc>')) failures.push('editor route should not compete with the homepage in sitemap');
 
 for (const htmlPath of await collectHtml('dist')) {
   const html = await read(htmlPath);
@@ -78,6 +85,17 @@ for (const name of manualFiles) {
   if (!serviceWorker.includes(`manual/${name}`)) {
     failures.push(`service worker does not precache manual/${name}`);
   }
+}
+
+const manualIndex = await read(path.join('dist', 'manual', 'INDEX.md'));
+const todayInJapan = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: 'Asia/Tokyo',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(new Date());
+if (!manualIndex.includes(`最新版の作成日：${todayInJapan}`)) {
+  failures.push('manual release date was not stamped with the current Japan date');
 }
 
 if (failures.length > 0) {

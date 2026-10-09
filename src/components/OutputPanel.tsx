@@ -131,7 +131,7 @@ export function OutputPanel({
             <button type="button" className="secondary" onClick={() => applyDisabilityEmploymentDemo('a3-landscape')}>A3横・配慮事項付きデモを入力</button>
           </div>
         </div>
-        <p className="output-guidance">右側のPDFプレビューで内容を確認し、PDFを表示・保存してください。</p>
+        <p className="output-guidance">右側のPDFプレビューで内容を確認し、PDF・Word・Excelを保存できます。Word・Excelは編集できますが、印刷前にページ配置を確認してください。</p>
       </div>
       <div className="output-card">
         <h3>入力データ保存</h3>

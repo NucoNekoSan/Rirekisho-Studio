@@ -16,6 +16,8 @@
 | `REFACTORING_AUDIT.md` | 全体監査の指摘、対応内容、見送り判断 |
 | `SECURITY_ASSESSMENT_2026-07-16.md` | ローカル脆弱性診断・ペネトレーションテスト結果 |
 | `LICENSE_COPYRIGHT_AUDIT_2026-07-16.md` | ライセンス・著作権・外部API利用条件の監査結果 |
+| `ASSET_PROVENANCE.md` | favicon・PWAアイコン等の静的アセット台帳 |
+| `PORTFOLIO_PUBLISHING.md` | Works CMSへ登録する公開情報と画像条件 |
 
 ## Specs
 

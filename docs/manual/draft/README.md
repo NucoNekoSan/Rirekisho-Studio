@@ -46,6 +46,8 @@ docs/manual/draft/
 3. やさしい日本語＋総ルビ版を `docs/manual/easy/` へコピーし書き換え。`<ruby>` で総ルビ。
 4. HTML版を `docs/manual/html/` へ。`alt` テキスト・見出し階層検証。
 
+公開版の「最新版の作成日」は、`npm run build`時に`scripts/stamp-manual-date.mjs`が日本時間の当日へ自動更新する。ソース側の日付を手作業で更新する必要はない。
+
 ## レビュー記録
 
 レビュー時の指摘は `docs/manual/REVIEW_LOG.md` に追記する。版間で共通の改善は本ドラフトへ反映してから派生版に伝播させる。

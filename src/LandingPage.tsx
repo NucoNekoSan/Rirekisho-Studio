@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
+import { sitePath } from './lib/sitePath';
 
 const features = [
   ['A4・A3 PDF', 'A4縦2ページまたはA3横1枚の履歴書をブラウザ内で生成します。'],
@@ -16,17 +17,17 @@ export function LandingPage() {
         <nav aria-label="サービス案内">
           <a href="#features">機能</a>
           <a href="#privacy">プライバシー</a>
-          <a href="https://github.com/NucoNekoSan/Rirekisho-builderApp" target="_blank" rel="noreferrer">GitHub</a>
+          <Link to="/terms">利用規約</Link>
         </nav>
       </header>
       <main id="top">
         <section className="landing-hero">
           <p className="landing-eyebrow">YOUR RESUME, YOUR DEVICE</p>
-          <h1>履歴書を、<br />自分の端末で丁寧につくる。</h1>
-          <p className="landing-lead">日本向けの履歴書を入力し、A4・A3のPDFとして保存できる無料ツールです。個人情報はCloudflareや運営者のサーバーへ保存しません。</p>
+          <h1>Rirekisho Studioで履歴書を、<br />自分の端末で丁寧につくる。</h1>
+          <p className="landing-lead">Rirekisho Studioは、日本向けの履歴書を作成し、A4・A3のPDFとして保存できる無料アプリです。個人情報はCloudflareや運営者のサーバーへ保存しません。</p>
           <div className="landing-actions">
             <Link className="landing-primary" to="/app">履歴書を作成する</Link>
-            <a className="landing-secondary" href="https://github.com/NucoNekoSan/Rirekisho-builderApp" target="_blank" rel="noreferrer">ソースコードを見る</a>
+            <a className="landing-secondary" href={sitePath('manual/')}>使い方を見る</a>
           </div>
           <p className="landing-note">アカウント登録不要・ブラウザだけで利用できます</p>
         </section>
@@ -53,6 +54,7 @@ export function LandingPage() {
           <div>
             <p>入力内容、写真、配慮事項はブラウザ内で処理します。端末への保存は、利用者が明示的に有効化した場合だけ行います。</p>
             <p>外部通信は郵便番号から住所を検索するときだけです。保存用JSONは平文のため、安全な場所で管理してください。</p>
+            <p><Link to="/privacy">詳しいプライバシーポリシーを確認する</Link></p>
           </div>
         </section>
 
@@ -63,7 +65,11 @@ export function LandingPage() {
       </main>
       <footer className="landing-footer">
         <span>Rirekisho Studio</span>
-        <a href="https://nuconeko-garden.com/works/">ぬこねこの庭 Works</a>
+        <nav aria-label="フッター">
+          <Link to="/privacy">プライバシー</Link>
+          <Link to="/terms">利用規約</Link>
+          <a href="https://nuconeko-garden.com/works/">ぬこねこの庭 Works</a>
+        </nav>
       </footer>
     </div>
   );

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/stamp-manual-date.mjs",
     "deploy": "npm run build && wrangler deploy",
     "preview:worker": "npm run build && wrangler dev",
     "check": "npm run lint && npm run typecheck:test && npm run test:coverage && npm run build && npm run check:docs && npm run check:deploy && npm run check:security && npm run test:e2e:run",
@@ -25,11 +25,18 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "docx": "^9.9.0",
+    "exceljs": "^4.4.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.4"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

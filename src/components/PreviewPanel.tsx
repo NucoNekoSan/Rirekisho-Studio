@@ -1,5 +1,6 @@
 // PDFプレビューパネル: 右カラムに表示されるリアルタイムPDFプレビューとPDF出力ボタン
 import type { ReactNode, RefObject } from 'react';
+import type { OfficeFormat } from '../browser/officeRenderer';
 
 export type PreviewScale = 'fit' | 'large';
 export type PreviewPage = 'resume' | 'accommodation';
@@ -15,10 +16,12 @@ interface PreviewPanelProps {
   previewA4PageCount: number | null;
   showAccommodationButtons: boolean;
   isGeneratingPdf: boolean;
+  isGeneratingOffice: boolean;
   isPdfOutputBlocked: boolean;
   pdfOutputBlockReason: string;
   onOpenPreviewDialog: () => void;
   runPdfAction: (mode: 'open' | 'download', includeAccommodation: boolean) => void;
+  runOfficeAction: (format: OfficeFormat, includeAccommodation: boolean) => void;
   previewPaperClass: string;
   previewPagesRef: RefObject<HTMLDivElement | null>;
   previewFrameHeight: number | null;
@@ -41,10 +44,12 @@ export function PreviewPanel({
   previewA4PageCount,
   showAccommodationButtons,
   isGeneratingPdf,
+  isGeneratingOffice,
   isPdfOutputBlocked,
   pdfOutputBlockReason,
   onOpenPreviewDialog,
   runPdfAction,
+  runOfficeAction,
   previewPaperClass,
   previewPagesRef,
   previewFrameHeight,
@@ -83,6 +88,17 @@ export function PreviewPanel({
             </>
           ) : null}
         </div>
+        <div className="preview-actions" aria-label="Word・Excel出力操作">
+          <button type="button" onClick={() => runOfficeAction('docx', false)} disabled={isGeneratingOffice}>履歴書Wordを保存</button>
+          <button type="button" onClick={() => runOfficeAction('xlsx', false)} disabled={isGeneratingOffice}>履歴書Excelを保存</button>
+          {showAccommodationButtons ? (
+            <>
+              <button type="button" onClick={() => runOfficeAction('docx', true)} disabled={isGeneratingOffice}>履歴書+配慮事項Wordを保存</button>
+              <button type="button" onClick={() => runOfficeAction('xlsx', true)} disabled={isGeneratingOffice}>履歴書+配慮事項Excelを保存</button>
+            </>
+          ) : null}
+        </div>
+        <p className="preview-note">Word・Excelの文字は編集できます。印刷前にページ配置をご確認ください。</p>
         {isPdfOutputBlocked ? <p className="warning-text" role="alert">{pdfOutputBlockReason}</p> : null}
         <div className={`preview-pages preview-${previewScale} ${previewPaperClass}`} ref={previewPagesRef}>
           <PreviewPageFrame height={previewFrameHeight}>

@@ -85,6 +85,41 @@ test('IME confirmation keeps focus and input in the current field', async ({ pag
   await expect(furigana).toBeFocused();
 });
 
+test('long text fields open a large editor, update live, and restore focus', async ({ page }) => {
+  await page.goto('/app');
+  const motivation = page.locator('#appeal').getByRole('textbox', { name: '志望動機', exact: true });
+
+  await motivation.click();
+  const dialog = page.getByRole('dialog', { name: '志望動機を大きく編集' });
+  await expect(dialog).toBeVisible();
+
+  const expandedEditor = dialog.getByRole('textbox', { name: '志望動機', exact: true });
+  await expandedEditor.fill('大きな画面で文章全体を確認できます。');
+  await expect(motivation).toHaveValue('大きな画面で文章全体を確認できます。');
+  await expect(dialog.getByText('18 / 350文字')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(motivation).toBeFocused();
+
+  for (const label of ['自己PR', '作業メモ']) {
+    const field = page.locator('#appeal').getByRole('textbox', { name: label, exact: true });
+    await field.click();
+    const expanded = page.getByRole('dialog', { name: `${label}を大きく編集` });
+    await expect(expanded).toBeVisible();
+    await expanded.getByRole('textbox', { name: label, exact: true }).fill(`${label}の入力確認`);
+    await expect(field).toHaveValue(`${label}の入力確認`);
+    await page.keyboard.press('Escape');
+    await expect(field).toBeFocused();
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: '作業メモを大きく編集' }).click();
+  const memoDialog = page.getByRole('dialog', { name: '作業メモを大きく編集' });
+  await expect(memoDialog).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+});
+
 test('PDF display opens a tab before asynchronous generation completes', async ({ page }) => {
   await page.goto('/app');
   const popupPromise = page.waitForEvent('popup');

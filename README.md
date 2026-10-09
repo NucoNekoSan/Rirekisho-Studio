@@ -1,14 +1,15 @@
 # Rirekisho Studio
 
-日本向けの履歴書をブラウザ内で作成し、A4・A3のPDFとして保存できるReactアプリです。
+日本向けの履歴書をブラウザ内で作成し、PDF・Word・Excelとして保存できるReactアプリです。
 
-- 公開予定URL: https://resume.nuconeko-garden.com/
+- 公開URL: https://resume.nuconeko-garden.com/
 - Works: https://nuconeko-garden.com/works/
 - Repository: https://github.com/NucoNekoSan/Rirekisho-builderApp
 
 ## Features
 
 - A4縦2ページ・A3横1枚の履歴書PDF
+- 編集可能なWord（.docx）・Excel（.xlsx）書き出し。用紙設定はA4縦・A3横に対応
 - JPG/JPEG証明写真の切り抜き、回転、削除
 - 西暦・和暦、明朝・ゴシック、項目別文字揃え
 - 必要な場合だけ有効化できる配慮事項シート
@@ -23,11 +24,18 @@
 
 外部通信は、住所検索時に正規化済みの7桁郵便番号をzipcloudへ送る場合だけです。JSONファイルは平文なので、利用者自身が安全な場所で管理する必要があります。
 
+- プライバシーポリシー: https://resume.nuconeko-garden.com/privacy
+- 利用規約: https://resume.nuconeko-garden.com/terms
+
+## License
+
+ソースコードは [MIT License](LICENSE) で公開します。第三者ライブラリについては [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。
+
 ## Stack
 
 - React 19 / TypeScript / Vite / React Router
 - IndexedDB
-- html2canvas / jsPDF
+- html2canvas / jsPDF / docx / ExcelJS
 - Vitest / Testing Library / Playwright
 - Cloudflare Workers Static Assets / Workers Builds
 

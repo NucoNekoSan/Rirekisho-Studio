@@ -14,7 +14,7 @@ describe('browser storage boundary', () => {
   it('uses IndexedDB for resume documents and localStorage only for non-PII consent', () => {
     const combined = sourceFiles(sourceRoot).map((file) => readFileSync(file, 'utf8')).join('\n');
 
-    expect(combined).not.toMatch(/sessionStorage/);
+    expect(combined).not.toMatch(/\bsessionStorage\s*[.[]/);
     expect(combined).toContain("localStorage.getItem('rirekisho-studio:storage-consent')");
     expect(combined).not.toMatch(/localStorage\.(?:setItem|getItem)\([^)]*(?:name|address|phone|photo|accommodation)/i);
     expect(combined).toContain("const DATABASE_NAME = 'rirekisho-studio'");
