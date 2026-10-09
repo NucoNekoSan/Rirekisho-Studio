@@ -43,16 +43,18 @@ describe('PreviewPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: '見本を大きく見る' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書PDFを表示' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書PDFを保存' }));
-    fireEvent.click(screen.getByRole('radio', { name: '履歴書と配慮事項' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項も含める' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書と配慮事項PDFを表示' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書と配慮事項PDFを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     fireEvent.click(screen.getByRole('radio', { name: 'Word（.docx）' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書と配慮事項Wordを保存' }));
-    fireEvent.click(screen.getByRole('radio', { name: '履歴書のみ' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項も含める' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書Wordを保存' }));
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     fireEvent.click(screen.getByRole('radio', { name: 'Excel（.xlsx）' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書Excelを保存' }));
-    fireEvent.click(screen.getByRole('radio', { name: '履歴書と配慮事項' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項も含める' }));
     fireEvent.click(screen.getByRole('button', { name: '履歴書と配慮事項Excelを保存' }));
 
     expect(setPreviewScale).toHaveBeenNthCalledWith(1, 'fit');
@@ -84,7 +86,7 @@ describe('PreviewPanel', () => {
         resumePreview={<div>履歴書プレビュー</div>} accommodationPreview={null}
       />,
     );
-    expect(screen.queryByRole('radio', { name: '履歴書と配慮事項' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: '配慮事項も含める' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '履歴書Excelを保存' }));
     expect(runOfficeAction).toHaveBeenLastCalledWith('xlsx', false);
   });
@@ -118,7 +120,7 @@ describe('PreviewPanel', () => {
 
     expect(screen.getByText('配慮事項プレビュー')).toBeInTheDocument();
     expect(screen.getByText('PDFでは入力内容を意味単位でA4縦ページへ分割します。')).toBeInTheDocument();
-    expect(screen.queryByRole('radio', { name: '履歴書と配慮事項' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: '配慮事項も含める' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -152,6 +154,7 @@ describe('PreviewPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('A4縦2ページに収まりません。');
     expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     fireEvent.click(screen.getByRole('radio', { name: 'Word（.docx）' }));
     expect(screen.getByRole('button', { name: '履歴書Wordを保存' })).not.toHaveAttribute('aria-disabled', 'true');
   });
