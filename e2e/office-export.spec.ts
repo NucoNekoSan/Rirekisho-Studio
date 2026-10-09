@@ -6,6 +6,7 @@ test('downloads the default A4 template in both editable formats', async ({ page
     ['履歴書Wordを保存', 'docx'],
     ['履歴書Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
     const download = await downloadPromise;
@@ -18,10 +19,12 @@ test('downloads editable Word and Excel files with the selected supplement', asy
   await page.goto('/app');
   await page.getByRole('button', { name: 'A3横・配慮事項付きデモを入力' }).click();
 
+  await page.getByRole('radio', { name: '履歴書と配慮事項' }).check();
   for (const [label, extension] of [
-    ['履歴書+配慮事項Wordを保存', 'docx'],
-    ['履歴書+配慮事項Excelを保存', 'xlsx'],
+    ['履歴書と配慮事項Wordを保存', 'docx'],
+    ['履歴書と配慮事項Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
     const download = await downloadPromise;
@@ -38,6 +41,7 @@ test('downloads the A4 resume as Word and Excel', async ({ page }, testInfo) => 
     ['履歴書Wordを保存', 'docx'],
     ['履歴書Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
     const download = await downloadPromise;

@@ -237,8 +237,8 @@ export function ResumePage({
 }) {
   const pageData = prepareResumePageData(resume, 'a4');
   return (
-    <div ref={captureRef} className={`pdf-document resume-document resume-a4-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書PDFプレビュー">
-      <article className="pdf-page resume-page resume-a4-page resume-a4-page-1" aria-label="履歴書PDFプレビュー 1ページ">
+    <div ref={captureRef} className={`pdf-document resume-document resume-a4-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書仕上がり見本">
+      <article className="pdf-page resume-page resume-a4-page resume-a4-page-1" aria-label="履歴書仕上がり見本 1ページ">
         <ResumeHeader resume={resume} pageNumber={1} pageCount={2} printDate={printDate} />
         <div className="resume-page-body resume-a4-body resume-a4-body-1">
           <ResumeProfile resume={resume} printDate={printDate} />
@@ -252,7 +252,7 @@ export function ResumePage({
           />
         </div>
       </article>
-      <article className="pdf-page resume-page resume-a4-page resume-a4-page-2" aria-label="履歴書PDFプレビュー 2ページ">
+      <article className="pdf-page resume-page resume-a4-page resume-a4-page-2" aria-label="履歴書仕上がり見本 2ページ">
         <div className="resume-a4-page-number" aria-hidden="true">2/2</div>
         <div className="resume-page-body resume-a4-body resume-a4-body-2">
           <ResumeHistoryTable
@@ -332,8 +332,8 @@ export function ResumeA3Page({
   const pageData = prepareResumePageData(resume, 'a3');
 
   return (
-    <div ref={captureRef} className={`pdf-document resume-document resume-a3-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書PDFプレビュー">
-      <article className="pdf-page resume-a3-page" aria-label="履歴書PDFプレビュー A3横">
+    <div ref={captureRef} className={`pdf-document resume-document resume-a3-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書仕上がり見本">
+      <article className="pdf-page resume-a3-page" aria-label="履歴書仕上がり見本 A3横">
         <div className="resume-a3-body">
           <div className="resume-a3-face resume-a3-left-face">
             <ResumeA3ProfileBlock resume={resume} printDate={printDate} />
@@ -429,9 +429,9 @@ export function AccommodationPage({
 }) {
   const pages = buildAccommodationPrintPages(accommodation);
   return (
-    <div ref={captureRef} className={`pdf-document accommodation-document ${pdfFontClass(pdfFontFamily)}`} aria-label="配慮事項シートPDFプレビュー">
+    <div ref={captureRef} className={`pdf-document accommodation-document ${pdfFontClass(pdfFontFamily)}`} aria-label="配慮事項シート仕上がり見本">
       {pages.map((page) => (
-        <article key={page.id} className="pdf-page accommodation-page" aria-label={`配慮事項シートPDFプレビュー ${page.pageNumber}ページ`}>
+        <article key={page.id} className="pdf-page accommodation-page" aria-label={`配慮事項シート仕上がり見本 ${page.pageNumber}ページ`}>
           <AccommodationHeader eraMode={eraMode} pageNumber={page.pageNumber} pageCount={pages.length} />
           {page.showNote ? (
             <p className="sheet-note">
