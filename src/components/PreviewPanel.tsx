@@ -1,5 +1,6 @@
 // 仕上がり見本とファイルの書き出し操作
-import { useEffect, useState, type ReactNode, type RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import { ExportControls } from './ExportControls';
 import type { OfficeFormat } from '../browser/officeRenderer';
 
 export type PreviewScale = 'fit' | 'large';
@@ -56,21 +57,6 @@ export function PreviewPanel({
   resumePreview,
   accommodationPreview,
 }: PreviewPanelProps) {
-  const [selectedFormat, setSelectedFormat] = useState<'pdf' | OfficeFormat>('pdf');
-  const [includeAccommodation, setIncludeAccommodation] = useState(false);
-  useEffect(() => {
-    if (!showAccommodationButtons) setIncludeAccommodation(false);
-  }, [showAccommodationButtons]);
-  const includeSelected = showAccommodationButtons && includeAccommodation;
-  const busy = isGeneratingPdf || isGeneratingOffice;
-  const blocked = busy || (selectedFormat === 'pdf' && isPdfOutputBlocked);
-  const subject = includeSelected ? '履歴書と配慮事項' : '履歴書';
-  const formatLabel = selectedFormat === 'pdf' ? 'PDF' : selectedFormat === 'docx' ? 'Word' : 'Excel';
-  const runSelectedAction = (mode: 'open' | 'download') => {
-    if (blocked) return;
-    if (selectedFormat === 'pdf') runPdfAction(mode, includeSelected);
-    else if (mode === 'download') runOfficeAction(selectedFormat, includeSelected);
-  };
   return (
     <aside className="preview-panel" id="preview-panel" aria-labelledby="preview-panel-title">
       <div className="preview-sticky">
@@ -94,32 +80,15 @@ export function PreviewPanel({
             : `PDFでは入力内容を意味単位で${activePreviewFormat}ページへ分割します。`}
         </p>
         <button type="button" className="secondary preview-large-button" onClick={onOpenPreviewDialog}>見本を大きく見る</button>
-        <section className="export-panel" aria-labelledby="export-panel-title" aria-busy={busy}>
-          <h3 id="export-panel-title">ファイルを書き出す</h3>
-          <fieldset className="export-options" disabled={busy}>
-            <legend>保存形式</legend>
-            <div className="export-choice-row">
-              {([['pdf', 'PDF（.pdf）'], ['docx', 'Word（.docx）'], ['xlsx', 'Excel（.xlsx）']] as const).map(([value, label]) => (
-                <label className="export-choice" key={value}><input type="radio" name="export-format" value={value} checked={selectedFormat === value} onChange={() => setSelectedFormat(value)} />{label}</label>
-              ))}
-            </div>
-          </fieldset>
-          {showAccommodationButtons ? (
-            <fieldset className="export-options" disabled={busy}>
-              <legend>保存する内容</legend>
-              <div className="export-choice-row">
-                <label className="export-choice"><input type="radio" name="export-content" checked={!includeAccommodation} onChange={() => setIncludeAccommodation(false)} />履歴書のみ</label>
-                <label className="export-choice"><input type="radio" name="export-content" checked={includeAccommodation} onChange={() => setIncludeAccommodation(true)} />履歴書と配慮事項</label>
-              </div>
-            </fieldset>
-          ) : null}
-          <div className="export-actions">
-            <button type="button" onClick={() => runSelectedAction('download')} aria-disabled={blocked} aria-describedby={selectedFormat === 'pdf' && isPdfOutputBlocked ? 'pdf-output-block-reason' : undefined}>{subject}{formatLabel}を保存</button>
-            {selectedFormat === 'pdf' ? <button type="button" className="secondary" onClick={() => runSelectedAction('open')} aria-disabled={blocked} aria-describedby={isPdfOutputBlocked ? 'pdf-output-block-reason' : undefined}>{subject}PDFを表示</button> : null}
-          </div>
-          {selectedFormat === 'pdf' && isPdfOutputBlocked ? <p className="warning-text" id="pdf-output-block-reason" role="alert">{pdfOutputBlockReason}</p> : null}
-          {selectedFormat !== 'pdf' ? <p className="preview-note">Word・Excelは保存後に印刷プレビューでページ配置を確認してください。文字は編集できます。</p> : null}
-        </section>
+        <ExportControls
+          paperFormatLabel={resumePaperFormatLabel}
+          showAccommodation={showAccommodationButtons}
+          busy={isGeneratingPdf || isGeneratingOffice}
+          isPdfOutputBlocked={isPdfOutputBlocked}
+          pdfOutputBlockReason={pdfOutputBlockReason}
+          runPdfAction={runPdfAction}
+          runOfficeAction={runOfficeAction}
+        />
         <div className={`preview-pages preview-${previewScale} ${previewPaperClass}`} ref={previewPagesRef}>
           <PreviewPageFrame height={previewFrameHeight}>
             {activePreviewPage === 'resume' ? resumePreview : accommodationPreview}

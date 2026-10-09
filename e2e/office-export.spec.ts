@@ -9,6 +9,7 @@ test('downloads the default A4 template in both editable formats', async ({ page
     ['履歴書Wordを保存', 'docx'],
     ['履歴書Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('button', { name: /保存形式を変更/ }).click();
     await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
@@ -22,11 +23,12 @@ test('downloads editable Word and Excel files with the selected supplement', asy
   await page.goto('/app');
   await page.getByRole('button', { name: 'A3横・配慮事項付きデモを入力' }).click();
 
-  await page.getByRole('radio', { name: '履歴書と配慮事項' }).check();
+  await page.getByRole('checkbox', { name: '配慮事項も含める' }).check();
   for (const [label, extension] of [
     ['履歴書と配慮事項Wordを保存', 'docx'],
     ['履歴書と配慮事項Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('button', { name: /保存形式を変更/ }).click();
     await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
@@ -44,6 +46,7 @@ test('downloads the A4 resume as Word and Excel', async ({ page }, testInfo) => 
     ['履歴書Wordを保存', 'docx'],
     ['履歴書Excelを保存', 'xlsx'],
   ] as const) {
+    await page.getByRole('button', { name: /保存形式を変更/ }).click();
     await page.getByRole('radio', { name: extension === 'docx' ? 'Word（.docx）' : 'Excel（.xlsx）' }).check();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label }).click();
@@ -87,9 +90,10 @@ for (const paperFormat of ['a4-portrait', 'a3-landscape'] as const) {
       name: 'handoff.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(project)),
     });
     await expect(page.getByRole('textbox', { name: '氏名', exact: true })).toHaveValue('引き継ぎテスト');
-    await expect(page.getByRole('radio', { name: '履歴書のみ', exact: true })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: '配慮事項も含める', exact: true })).not.toBeChecked();
     for (const extension of ['docx', 'xlsx'] as const) {
       const format = extension === 'docx' ? 'Word' : 'Excel';
+      await page.getByRole('button', { name: /保存形式を変更/ }).click();
       await page.getByRole('radio', { name: `${format}（.${extension}）` }).check();
       const downloadPromise = page.waitForEvent('download');
       await page.getByRole('button', { name: `履歴書${format}を保存`, exact: true }).click();

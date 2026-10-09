@@ -403,14 +403,17 @@ describe('App accessibility labels', () => {
     expect(screen.getByText('追加書類が無効のため、配慮事項シートは出力しません。')).toBeInTheDocument();
     expect(screen.queryByText('配慮事項シートはA4縦形式で出力します。')).not.toBeInTheDocument();
     expect(screen.getByText('右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     expect(screen.getByRole('radio', { name: 'PDF（.pdf）' })).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toBeInTheDocument();
-    expect(screen.queryByRole('radio', { name: '履歴書と配慮事項' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: '配慮事項も含める' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項シートを作成する' }));
     expect(screen.getByText('配慮事項シートはA4縦形式で出力します。')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: '履歴書と配慮事項' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項も含める' }));
     expect(screen.getByRole('button', { name: '履歴書と配慮事項PDFを保存' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /保存形式を変更/ }));
     fireEvent.click(screen.getByRole('radio', { name: 'Word（.docx）' }));
     expect(screen.getByRole('button', { name: '履歴書と配慮事項Wordを保存' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '履歴書と配慮事項PDFを表示' })).not.toBeInTheDocument();
