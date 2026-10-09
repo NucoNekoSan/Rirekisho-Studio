@@ -3,6 +3,7 @@ import { calculateAgeFromDateInput, formatDate, formatDateInputValue } from '../
 import { formatPhoneNumberForDisplay, formatPostalCodeForDisplay } from '../lib/inputFormat';
 import { getTextAlignment } from '../lib/alignment';
 import { buildAccommodationPrintPages } from '../lib/printPagination';
+import { splitResumeHistory, type ResumePaperVariant } from '../lib/resumeFixedLayout';
 import type {
   AccommodationPrintSection,
   ResumePrintSection,
@@ -149,8 +150,6 @@ function ResumeTableRows({
   );
 }
 
-type ResumePaperVariant = 'a3' | 'a4';
-
 /**
  * A4/A3の固定レイアウトにおける学歴・職歴テーブルの行数設定。
  * printPagination.ts の動的ページ分割とは独立した、固定ページ構造の制御値。
@@ -160,16 +159,6 @@ type ResumePaperVariant = 'a3' | 'a4';
  * - secondaryMin: 2ページ目（A3は右カラム）の最小空行数
  * - qualBlanks:  免許・資格テーブルの下に追加する空行数
  */
-const HISTORY_LAYOUT: Record<ResumePaperVariant, {
-  primaryRows: number;
-  primaryMin: number;
-  secondaryMin: number;
-  qualBlanks: number;
-}> = {
-  a3: { primaryRows: 22, primaryMin: 22, secondaryMin: 7, qualBlanks: 3 },
-  a4: { primaryRows: 21, primaryMin: 21, secondaryMin: 5, qualBlanks: 5 },
-};
-
 function ResumeHistoryTable({
   variant,
   resume,
@@ -316,11 +305,11 @@ const resumeTextSection = (
 });
 
 const prepareResumePageData = (resume: ResumeData, variant: ResumePaperVariant) => {
-  const layout = HISTORY_LAYOUT[variant];
+  const { layout, primaryRows, secondaryRows } = splitResumeHistory(resume.histories, variant);
   return {
     layout,
-    primaryHistoryRows: resume.histories.slice(0, layout.primaryRows),
-    secondaryHistoryRows: resume.histories.slice(layout.primaryRows),
+    primaryHistoryRows: primaryRows,
+    secondaryHistoryRows: secondaryRows,
     qualificationSection: resumeTableSection('qualifications', '免許・資格', resume.qualifications),
     textSections: {
       motivation: resumeTextSection('motivation', '志望動機', resume.motivation),

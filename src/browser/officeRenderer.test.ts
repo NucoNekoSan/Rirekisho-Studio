@@ -26,8 +26,8 @@ describe('downloadOfficeDocument', () => {
     } else {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await blob.arrayBuffer() as ExcelJS.Buffer);
-      expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(['履歴書', '配慮事項シート']);
-      expect(workbook.getWorksheet('履歴書')!.getCell('B5').value).toBe('出力テスト');
+      expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(['履歴書 1', '履歴書 2', '配慮事項 1']);
+      expect(workbook.getWorksheet('履歴書 1')!.getCell('C4').value).toBe('出力テスト');
     }
   });
 });

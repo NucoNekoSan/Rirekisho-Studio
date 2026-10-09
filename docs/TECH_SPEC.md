@@ -4,7 +4,7 @@
 
 - フロントエンド: React 19 + TypeScript + Vite
 - PDF生成: HTML A4縦/A3横プレビュー → html2canvas → jsPDF
-- Office生成: 履歴書データ → 共通出力項目 → docx / ExcelJS → ブラウザ内Blobダウンロード。文字・セルは編集可能で、選択した用紙形式の印刷設定を使う。
+- Office生成: 履歴書データ → 共通ページ構成 → docx / ExcelJS → ブラウザ内Blobダウンロード。PDFに近いA4縦2ページまたはA3横1ページの履歴書様式を表で再現する。Wordの文字・表、Excelのセルは編集可能。入り切らない学歴・職歴は続きページへ出力し、Excelではページごとにシートを分ける。
 - データ保存: 明示同意後のIndexedDB、およびJSONファイルのダウンロード/アップロード
 - デプロイ: Cloudflare Workers Static Assets。Node.jsはビルド時のみ使用。
 - 型チェック: TypeScript strict モード。
