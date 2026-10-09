@@ -4,7 +4,7 @@ const chapters = [
   { id: '02-overview', label: '2. 全体の流れ' },
   { id: '03-input-guide', label: '3. 入力ガイド' },
   { id: '04-accommodation', label: '4. 配慮事項シート' },
-  { id: '05-pdf-output', label: '5. PDF確認・保存' },
+  { id: '05-pdf-output', label: '5. 仕上がり確認・保存' },
   { id: '06-save-load', label: '6. 入力データ保存・読込' },
   { id: '07-faq', label: '7. よくある質問' },
   { id: '08-appendix', label: '8. 巻末資料' },

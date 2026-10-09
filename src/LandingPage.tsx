@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
+import { sitePath } from './lib/sitePath';
 
 const features = [
-  ['A4・A3 PDF', 'A4縦2ページまたはA3横1枚の履歴書をブラウザ内で生成します。'],
+  ['PDF・Word・Excel', 'A4縦・A3横のPDFと、編集可能なWord・Excelをブラウザ内で生成します。'],
   ['端末内で完結', '入力内容はサーバーへ保存しません。許可した場合だけ、この端末内に保存します。'],
   ['写真と書式', '証明写真の切り抜き、和暦・西暦、明朝・ゴシック、文字揃えに対応します。'],
   ['追加書類', '必要な場合だけ、就労上の配慮事項シートを別紙として作成できます。'],
@@ -22,11 +23,11 @@ export function LandingPage() {
       <main id="top">
         <section className="landing-hero">
           <p className="landing-eyebrow">YOUR RESUME, YOUR DEVICE</p>
-          <h1>履歴書を、<br />自分の端末で丁寧につくる。</h1>
-          <p className="landing-lead">日本向けの履歴書を入力し、A4・A3のPDFとして保存できる無料ツールです。個人情報はCloudflareや運営者のサーバーへ保存しません。</p>
+          <h1>Rirekisho Studioで履歴書を、<br />自分の端末で丁寧につくる。</h1>
+          <p className="landing-lead">Rirekisho Studioは、日本向けの履歴書を作成し、A4・A3のPDFや編集可能なWord・Excelとして保存できる無料アプリです。個人情報はCloudflareや運営者のサーバーへ保存しません。</p>
           <div className="landing-actions">
             <Link className="landing-primary" to="/app">履歴書を作成する</Link>
-            <a className="landing-secondary" href="/manual/">使い方を見る</a>
+            <a className="landing-secondary" href={sitePath('manual/')}>使い方を見る</a>
           </div>
           <p className="landing-note">アカウント登録不要・ブラウザだけで利用できます</p>
         </section>

@@ -1,4 +1,4 @@
-// 保存・PDF出力パネル: PDF様式選択、入力データJSON保存・読込、データ初期化のUI
+// 保存・PDF出力パネル: 用紙形式選択、入力データJSON保存・読込、データ初期化のUI
 import type { ChangeEvent } from 'react';
 import { hasSensitiveAccommodationOutput } from '../lib/accommodation';
 import { RESUME_APPEAL_MAX_LENGTH } from '../lib/config';
@@ -63,10 +63,10 @@ export function OutputPanel({
   return (
     <div className="output-grid">
       <div className="output-card output-card-wide">
-        <h3>PDF出力前確認</h3>
+        <h3>書き出し前の確認</h3>
         <ul className="check-list">
           <li>配慮事項シートは選択した場合だけ別紙として出力します。</li>
-          <li>作業メモはPDFに出力しません。</li>
+          <li>作業メモは書き出しファイルに含めません。</li>
           <li>{`履歴書は${resumePaperFormatLabel}形式で出力します。`}</li>
           {resumePaperFormat === 'a4-portrait' ? (
             <li>A4縦は履歴書2ページまでを標準にしています。</li>
@@ -88,7 +88,7 @@ export function OutputPanel({
           )}
         </ul>
         <fieldset className="field choice-field pdf-paper-control">
-          <legend>PDF様式</legend>
+          <legend>用紙形式</legend>
           <div className="segmented-radios pdf-paper-options">
             {pdfPaperOptions.map((option) => (
               <label key={option.value}>
@@ -109,7 +109,7 @@ export function OutputPanel({
           </p>
         </fieldset>
         <fieldset className="field choice-field pdf-font-control">
-          <legend>PDF書体</legend>
+          <legend>書体</legend>
           <div className="segmented-radios pdf-font-options">
             {pdfFontOptions.map((option) => (
               <label key={option.value}>
@@ -131,7 +131,7 @@ export function OutputPanel({
             <button type="button" className="secondary" onClick={() => applyDisabilityEmploymentDemo('a3-landscape')}>A3横・配慮事項付きデモを入力</button>
           </div>
         </div>
-        <p className="output-guidance">右側のPDFプレビューで内容を確認し、PDFを表示・保存してください。</p>
+        <p className="output-guidance">右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。</p>
       </div>
       <div className="output-card">
         <h3>入力データ保存</h3>

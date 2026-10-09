@@ -52,3 +52,9 @@
 - `test:security`: 本番成果物に対する静的検査とChromiumセキュリティE2Eを実行する。
 - `security:sca`: 開発依存込みと本番依存のみのnpm脆弱性監査を実行する。
 - `test:e2e`: Chromiumでデスクトップ・390px幅、A4/A3、A4超過停止、PDFポップアップ、JSON往復、CSPマニュアル、オフラインマニュアルを検証する。
+
+## Office出力の回帰確認
+
+- `officeExportData.test.ts`: 非公開メモ・非表示性別・機微項目の除外と学歴・職歴の続きページ。
+- `officeRenderer.test.ts`: 編集可能なOOXMLパッケージ、セル、結合範囲、印刷範囲の確認。
+- `e2e/office-export.spec.ts`: A4・A3、配慮事項の選択、写真を含むファイル、31行の学歴・職歴の欠落防止、非公開内容の除外、WordのセクションとExcelの用紙・印刷範囲を確認。

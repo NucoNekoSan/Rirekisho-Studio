@@ -12,7 +12,7 @@ export function LegalPage({ kind }: { kind: LegalPageKind }) {
 
   useEffect(() => {
     document.title = `${title} | Rirekisho Studio`;
-    return () => { document.title = 'Rirekisho Studio — 端末内で作る日本向け履歴書'; };
+    return () => { document.title = 'Rirekisho Studio｜無料の履歴書作成アプリ'; };
   }, [title]);
 
   return (
@@ -58,7 +58,7 @@ function PrivacyContent() {
       </section>
       <section>
         <h2>4. ファイルと削除</h2>
-        <p>PDFとJSONは利用者の操作で端末へ保存され、保存後は本アプリの管理外となります。JSONは暗号化されていないため、安全な場所で管理してください。写真は既定ではJSONに含まれません。</p>
+        <p>PDF・Word・Excel・JSONは利用者の操作で端末へ保存され、保存後は本アプリの管理外となります。これらのファイルは暗号化されていないため、安全な場所で管理してください。写真は既定ではJSONに含まれません。</p>
         <p>端末内の履歴書はアプリの削除操作、またはブラウザのサイトデータ削除で消去できます。共有端末では端末保存を有効にせず、ダウンロードしたファイルも利用後に削除してください。</p>
       </section>
       <section>
@@ -74,7 +74,7 @@ function TermsContent() {
     <>
       <section>
         <h2>1. サービスの目的</h2>
-        <p>本サービスは、日本向け履歴書の作成、確認、PDF出力を補助する無料ツールです。就職・採用・内定を保証するものではなく、職業紹介、添削、医療または法律上の助言を提供するものではありません。</p>
+        <p>本サービスは、日本向け履歴書の作成、確認、PDF・Word・Excel出力を補助する無料ツールです。就職・採用・内定を保証するものではなく、職業紹介、添削、医療または法律上の助言を提供するものではありません。</p>
       </section>
       <section>
         <h2>2. 利用者の責任</h2>

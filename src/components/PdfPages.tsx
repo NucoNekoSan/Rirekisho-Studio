@@ -3,6 +3,7 @@ import { calculateAgeFromDateInput, formatDate, formatDateInputValue } from '../
 import { formatPhoneNumberForDisplay, formatPostalCodeForDisplay } from '../lib/inputFormat';
 import { getTextAlignment } from '../lib/alignment';
 import { buildAccommodationPrintPages } from '../lib/printPagination';
+import { splitResumeHistory, type ResumePaperVariant } from '../lib/resumeFixedLayout';
 import type {
   AccommodationPrintSection,
   ResumePrintSection,
@@ -149,8 +150,6 @@ function ResumeTableRows({
   );
 }
 
-type ResumePaperVariant = 'a3' | 'a4';
-
 /**
  * A4/A3の固定レイアウトにおける学歴・職歴テーブルの行数設定。
  * printPagination.ts の動的ページ分割とは独立した、固定ページ構造の制御値。
@@ -160,16 +159,6 @@ type ResumePaperVariant = 'a3' | 'a4';
  * - secondaryMin: 2ページ目（A3は右カラム）の最小空行数
  * - qualBlanks:  免許・資格テーブルの下に追加する空行数
  */
-const HISTORY_LAYOUT: Record<ResumePaperVariant, {
-  primaryRows: number;
-  primaryMin: number;
-  secondaryMin: number;
-  qualBlanks: number;
-}> = {
-  a3: { primaryRows: 22, primaryMin: 22, secondaryMin: 7, qualBlanks: 3 },
-  a4: { primaryRows: 21, primaryMin: 21, secondaryMin: 5, qualBlanks: 5 },
-};
-
 function ResumeHistoryTable({
   variant,
   resume,
@@ -248,8 +237,8 @@ export function ResumePage({
 }) {
   const pageData = prepareResumePageData(resume, 'a4');
   return (
-    <div ref={captureRef} className={`pdf-document resume-document resume-a4-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書PDFプレビュー">
-      <article className="pdf-page resume-page resume-a4-page resume-a4-page-1" aria-label="履歴書PDFプレビュー 1ページ">
+    <div ref={captureRef} className={`pdf-document resume-document resume-a4-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書仕上がり見本">
+      <article className="pdf-page resume-page resume-a4-page resume-a4-page-1" aria-label="履歴書仕上がり見本 1ページ">
         <ResumeHeader resume={resume} pageNumber={1} pageCount={2} printDate={printDate} />
         <div className="resume-page-body resume-a4-body resume-a4-body-1">
           <ResumeProfile resume={resume} printDate={printDate} />
@@ -263,7 +252,7 @@ export function ResumePage({
           />
         </div>
       </article>
-      <article className="pdf-page resume-page resume-a4-page resume-a4-page-2" aria-label="履歴書PDFプレビュー 2ページ">
+      <article className="pdf-page resume-page resume-a4-page resume-a4-page-2" aria-label="履歴書仕上がり見本 2ページ">
         <div className="resume-a4-page-number" aria-hidden="true">2/2</div>
         <div className="resume-page-body resume-a4-body resume-a4-body-2">
           <ResumeHistoryTable
@@ -316,11 +305,11 @@ const resumeTextSection = (
 });
 
 const prepareResumePageData = (resume: ResumeData, variant: ResumePaperVariant) => {
-  const layout = HISTORY_LAYOUT[variant];
+  const { layout, primaryRows, secondaryRows } = splitResumeHistory(resume.histories, variant);
   return {
     layout,
-    primaryHistoryRows: resume.histories.slice(0, layout.primaryRows),
-    secondaryHistoryRows: resume.histories.slice(layout.primaryRows),
+    primaryHistoryRows: primaryRows,
+    secondaryHistoryRows: secondaryRows,
     qualificationSection: resumeTableSection('qualifications', '免許・資格', resume.qualifications),
     textSections: {
       motivation: resumeTextSection('motivation', '志望動機', resume.motivation),
@@ -343,8 +332,8 @@ export function ResumeA3Page({
   const pageData = prepareResumePageData(resume, 'a3');
 
   return (
-    <div ref={captureRef} className={`pdf-document resume-document resume-a3-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書PDFプレビュー">
-      <article className="pdf-page resume-a3-page" aria-label="履歴書PDFプレビュー A3横">
+    <div ref={captureRef} className={`pdf-document resume-document resume-a3-document ${pdfFontClass(resume.pdfFontFamily)}`} aria-label="履歴書仕上がり見本">
+      <article className="pdf-page resume-a3-page" aria-label="履歴書仕上がり見本 A3横">
         <div className="resume-a3-body">
           <div className="resume-a3-face resume-a3-left-face">
             <ResumeA3ProfileBlock resume={resume} printDate={printDate} />
@@ -440,9 +429,9 @@ export function AccommodationPage({
 }) {
   const pages = buildAccommodationPrintPages(accommodation);
   return (
-    <div ref={captureRef} className={`pdf-document accommodation-document ${pdfFontClass(pdfFontFamily)}`} aria-label="配慮事項シートPDFプレビュー">
+    <div ref={captureRef} className={`pdf-document accommodation-document ${pdfFontClass(pdfFontFamily)}`} aria-label="配慮事項シート仕上がり見本">
       {pages.map((page) => (
-        <article key={page.id} className="pdf-page accommodation-page" aria-label={`配慮事項シートPDFプレビュー ${page.pageNumber}ページ`}>
+        <article key={page.id} className="pdf-page accommodation-page" aria-label={`配慮事項シート仕上がり見本 ${page.pageNumber}ページ`}>
           <AccommodationHeader eraMode={eraMode} pageNumber={page.pageNumber} pageCount={pages.length} />
           {page.showNote ? (
             <p className="sheet-note">

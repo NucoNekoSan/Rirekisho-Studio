@@ -12,7 +12,7 @@
     "check:deploy": "node scripts/check-deployment.mjs",
     "check:docs": "node scripts/check-doc-consistency.mjs",
     "check:security": "node scripts/check-security.mjs",
-    "lint": "oxlint",
+    "lint": "oxlint src e2e scripts public vite.config.ts playwright.config.ts",
     "preview": "vite preview",
     "serve:test": "node scripts/serve-dist.mjs",
     "security:sca": "npm audit --audit-level=moderate && npm audit --omit=dev --audit-level=moderate",
@@ -25,11 +25,18 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "docx": "^9.9.0",
+    "exceljs": "^4.4.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.4"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

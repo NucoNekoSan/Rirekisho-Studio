@@ -102,6 +102,17 @@ test('long text fields open a large editor, update live, and restore focus', asy
   await expect(dialog).toBeHidden();
   await expect(motivation).toBeFocused();
 
+  for (const label of ['自己PR', '作業メモ']) {
+    const field = page.locator('#appeal').getByRole('textbox', { name: label, exact: true });
+    await field.click();
+    const expanded = page.getByRole('dialog', { name: `${label}を大きく編集` });
+    await expect(expanded).toBeVisible();
+    await expanded.getByRole('textbox', { name: label, exact: true }).fill(`${label}の入力確認`);
+    await expect(field).toHaveValue(`${label}の入力確認`);
+    await page.keyboard.press('Escape');
+    await expect(field).toBeFocused();
+  }
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: '作業メモを大きく編集' }).click();
   const memoDialog = page.getByRole('dialog', { name: '作業メモを大きく編集' });
