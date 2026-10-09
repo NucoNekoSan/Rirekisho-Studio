@@ -6,6 +6,14 @@ export default defineConfig({
   base: process.env.VITE_BASE_PATH ?? './',
   plugins: [
     react(),
+    {
+      name: 'subdirectory-html-links',
+      transformIndexHtml(html) {
+        const base = process.env.VITE_BASE_PATH;
+        if (!base || base === './') return html;
+        return html.replaceAll('href="/app"', `href="${base}app"`).replaceAll('href="/manual/"', `href="${base}manual/"`);
+      },
+    },
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
@@ -17,8 +25,8 @@ export default defineConfig({
         theme_color: '#2f5d50',
         background_color: '#f3f5f1',
         display: 'standalone',
-        scope: './',
-        start_url: '/app',
+        scope: process.env.VITE_BASE_PATH ?? './',
+        start_url: process.env.VITE_BASE_PATH ? `${process.env.VITE_BASE_PATH}app` : '/app',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

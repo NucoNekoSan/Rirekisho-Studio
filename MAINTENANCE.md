@@ -2,7 +2,7 @@
 
 このドキュメントは、Rirekisho Studioを保守する開発者向けの運用・保守ガイドです。
 
-> 2026-09-25以降の本番環境はCloudflare Workers Static Assetsです。以下に残るXserver手順は旧環境の記録であり、新規配備には使用しません。現在の配備設定は`wrangler.jsonc`、安全ヘッダーは`public/_headers`、操作手順はREADMEを正とします。
+> 本番環境はCloudflare Workers Static Assetsです。配備設定は`wrangler.jsonc`、安全ヘッダーは`public/_headers`を参照してください。最終統合・検証・復旧の記録は[引き継ぎ資料](docs/HANDOFF.md)にまとめています。
 システム全体像の把握から、日常的なUI変更、PDFレイアウト調整、デプロイまでをカバーします。
 
 ---
@@ -16,7 +16,7 @@
 5. [PDFレイアウト調整ガイド](#5-pdfレイアウト調整ガイド)
 6. [写真処理](#6-写真処理)
 7. [よくある変更パターン](#7-よくある変更パターン)
-8. [Xサーバーへのデプロイ手順](#8-xサーバーへのデプロイ手順)
+8. [Cloudflareへのデプロイ手順](#8-cloudflareへのデプロイ手順)
 9. [トラブルシューティング](#9-トラブルシューティング)
 10. [コマンド一覧](#10-コマンド一覧)
 11. [設定定数クイックリファレンス](#11-設定定数クイックリファレンス)
@@ -27,7 +27,7 @@
 
 ### 必要なソフトウェア
 
-1. **Node.js**（バージョン20以上）
+1. **Node.js**（24 LTS推奨。今回の検証環境は24.15.0）
    - https://nodejs.org/ から「LTS（推奨版）」をダウンロードしてインストール
    - インストール後、PowerShellで `node --version` を実行して確認
 
@@ -38,10 +38,11 @@
 
 ```powershell
 # 1. プロジェクトフォルダを開く
-cd C:\path\to\rirekisho-builder
+cd C:\path\to\rirekisho-studio
 
 # 2. 依存パッケージをインストール（初回のみ、またはpackage.jsonが変わったとき）
-npm install
+npm ci
+npx playwright install chromium
 
 # 3. 開発サーバーを起動
 npm run dev
@@ -58,7 +59,8 @@ npm run dev
 
 - **React 19** + **TypeScript 6** + **Vite 8**（クライアントサイドSPA）
 - サーバー不要。ブラウザだけで完結する静的Webアプリ
-- 個人情報はサーバーに送信せず、ブラウザにも保存しない（プライバシー重視設計）
+- 履歴書本文・写真・配慮事項はサーバーへ送信しない。初期設定はメモリのみで、本人が明示的に同意した場合だけIndexedDBへ保存する。
+- localStorageは保存同意などの設定だけを保存する。住所検索時は正規化した7桁郵便番号だけをzipcloudへ送信する。
 
 ### データの流れ
 
@@ -90,7 +92,7 @@ src/
 │   ├── PdfPages.tsx     … PDF出力用HTMLテンプレート（A4/A3履歴書＋配慮事項シート）
 │   ├── PdfPages.test.tsx … PdfPages のテスト
 │   ├── PreviewPanel.tsx … PDFプレビューパネル
-│   ├── OutputPanel.tsx  … 保存・PDF出力パネル
+│   ├── OutputPanel.tsx  … PDF・Word・Excelの形式と出力内容の選択
 │   └── ReloadPrompt.tsx … PWA更新プロンプト（新バージョン通知バナー）
 │
 ├── browser/
@@ -176,7 +178,7 @@ Service Workerは以下のルールでキャッシュを管理します:
 |------|------|------|
 | HTML / CSS / JS / 画像 | **プリキャッシュ** | ビルド時にファイル一覧を生成し、初回アクセスですべてキャッシュ。オフラインでも即座に表示 |
 | zipcloud API（郵便番号検索） | **NetworkOnly** | 常にネットワーク経由。オフライン時はエラーメッセージを表示 |
-| ユーザーの個人情報 | **キャッシュしない** | ブラウザストレージポリシーに準拠。履歴書データ・写真はブラウザに保存されない |
+| ユーザーの個人情報 | **Service Workerではキャッシュしない** | 本人の同意後のIndexedDB保存は別の仕組み。履歴書本文・写真を静的アセットのキャッシュへ混ぜない |
 
 ### カスタマイズ方法
 
@@ -233,7 +235,7 @@ npx @vite-pwa/assets-generator --preset minimal-2023 public/favicon.svg
 
 ### ストレージポリシーとの関係
 
-Service Workerの Cache API は静的アセット（HTML、CSS、JS、アイコン画像）のみをキャッシュします。ユーザーが入力した個人情報（氏名、住所、写真、障害情報など）は一切ブラウザに保存されません。この設計はブラウザストレージポリシー（`docs/BROWSER_STORAGE_POLICY.md`）に準拠しており、`src/lib/storageBoundary.test.ts` のガードテストも引き続き通過します。
+Service Workerの Cache API は静的アセット（HTML、CSS、JS、アイコン画像）のみをキャッシュします。入力した個人情報をCache APIやlocalStorageへ保存しません。本人が端末保存を有効にした場合だけ、履歴書本文・写真・有効な配慮事項をIndexedDBへ保存します。この設計はブラウザストレージポリシー（`docs/BROWSER_STORAGE_POLICY.md`）に準拠しており、`src/lib/storageBoundary.test.ts` のガードテストも引き続き通過します。
 
 ---
 
@@ -381,6 +383,12 @@ export const PDF_CANVAS_SCALE = 3;  // 大きいほど高精細だがメモリ�
 
 ---
 
+### Word・Excel出力の調整
+
+`src/lib/officeExportData.ts`が出力対象とページ構成を決定し、`src/browser/wordRenderer.ts`と`src/browser/excelRenderer.ts`が編集可能な表・セルへ変換します。固定枠は`src/lib/resumeFixedLayout.ts`、Office用寸法は`src/lib/officeLayout.ts`を参照します。PDFの仕上がり見本はWord・Excelそのもののプレビューではありません。
+
+A4縦・A3横の履歴書に対応し、学歴・職歴が枠を超える場合は続きページ／シートへ出力します。作業メモはPDF・Word・Excelに含めず、配慮事項は利用者が保存する内容で選択した場合だけ含めます。Officeアプリごとの改ページ差があるため、保存後の印刷プレビューを確認してください。Word・Excelを本アプリへ読み戻す機能はありません。
+
 ## 6. 写真処理
 
 ### 仕様
@@ -486,56 +494,52 @@ const HISTORY_LAYOUT = {
 
 ---
 
-## 8. Xサーバーへのデプロイ手順
+## 8. Cloudflareへのデプロイ手順
 
-### ステップ1: ビルド
+### 検証と配備
 
 ```powershell
-# 全品質ゲートを実行し、dist/ を生成
+npm ci
+npx playwright install chromium
 npm run check
+npm run security:sca
 ```
 
-### ステップ2: アップロード
+Workers Buildsで自動配備を設定する場合、production branchは`main`、build commandは`npm run build`、deploy commandは`npx wrangler deploy`です。GitHubへの統合後、Cloudflareで配備成功と対象コミットを確認します。今回確認できた権限ではBuilds設定APIを取得できないため、自動連携の有無を断定せず、配備実績は引き継ぎ資料へ記録します。公開URLは `https://resume.nuconeko-garden.com/` です。
 
-1. FTPクライアント（FileZillaなど）でXサーバーに接続
-2. `dist/` フォルダの中身をすべて、Xサーバーの公開ディレクトリにアップロード
-   - `.htaccess` ファイルも忘れずにアップロードしてください（隠しファイル表示を有効にする）
-   - `sw.js`、`workbox-*.js`、`manifest.webmanifest` もアップロード対象です（PWA動作に必須）
-3. ブラウザでアクセスして動作確認
-4. PWA更新確認: 既にインストール済みのユーザーには「新しいバージョンが利用可能です」バナーが表示されます
-
-### サブディレクトリに配置する場合
-
-例: `https://example.com/rirekisho/` に配置する場合
+手動配備が必要な場合は、Cloudflareに認証済みの環境で以下を実行します。
 
 ```powershell
-$env:VITE_BASE_PATH="/rirekisho/"; npm run build
+npm run deploy
 ```
+
+`wrangler.jsonc`のSPA fallbackとカスタムドメイン、`public/_headers`のCSPを維持してください。マニュアルの作成日はビルド時に`dist/manual/INDEX.md`へ日本時間で設定されます。原稿の日時を都度変更する必要はありません。
+
+配備後はトップ、`/app`、`/manual/`、`/privacy`、`/terms`、PDF・Word・Excel出力を確認します。PWAは利用者が「更新する」を選ぶまで自動再読込しません。障害時の復旧手順は[引き継ぎ資料](docs/HANDOFF.md)を参照してください。
+
+### 旧Xserver環境の記録
+
+2026-09-25以前は`dist/`をFTPでXserverへアップロードする方式でした。`.htaccess`を含む旧手順は現行環境では使用しません。Cloudflareへ配備する際にFTPアップロードや`.htaccess`の復元は不要です。
 
 ---
 
 ## 9. トラブルシューティング
 
-### `npm install` でエラーが出る
+### `npm ci` でエラーが出る
 
-- Node.js がインストールされているか確認: `node --version`
-- `node_modules` フォルダと `package-lock.json` を削除して再実行:
-  ```powershell
-  Remove-Item -Recurse -Force node_modules
-  Remove-Item package-lock.json
-  npm install
-  ```
+- `node --version`でNode.jsのバージョンを確認する。
+- `package.json`と`package-lock.json`が同じコミットの内容か確認する。lockfileを削除せず、対応する依存更新を確認してから再実行する。
 
 ### `npm run build` でエラーが出る
 
 - TypeScriptの型エラーの場合、エラーメッセージに表示されたファイルと行番号を確認
 - `npm run test` を先に実行して、テストが通るか確認
 
-### Xサーバーにアップロードしても動かない
+### Cloudflareへ配備しても更新されない
 
-- `.htaccess` がアップロードされているか確認（FTPの隠しファイル表示を有効にする）
-- ブラウザのキャッシュをクリアして再読み込み（Ctrl+Shift+R）
-- サブディレクトリに配置した場合、`VITE_BASE_PATH` を正しく設定してビルドしたか確認
+- Workers Buildsの対象ブランチ、対象コミット、ビルド・配備ログを確認する。
+- `wrangler.jsonc`のカスタムドメインとSPA fallbackを確認する。
+- インストール済みPWAでは更新通知の「更新する」を選ぶ。利用者の保存データを消す目的でサイトデータ削除を案内しない。
 
 ### 開発サーバーが起動しない
 
@@ -585,7 +589,9 @@ $env:VITE_BASE_PATH="/rirekisho/"; npm run build
 
 | コマンド | 説明 |
 |---------|------|
-| `npm install` | 依存パッケージのインストール |
+| `npm ci` | lockfileに固定した依存パッケージのインストール |
+| `npm run deploy` | ビルド後にCloudflare Workersへ手動配備 |
+| `npm run preview:worker` | Cloudflare Workers相当のローカル確認 |
 | `npm run dev` | 開発サーバーの起動（http://localhost:5173） |
 | `npm run build` | 本番用ビルド（dist/に出力） |
 | `npm run preview` | ビルド結果のローカルプレビュー |

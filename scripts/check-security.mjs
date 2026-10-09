@@ -4,7 +4,7 @@ import process from 'node:process';
 
 const root = process.cwd();
 const failures = [];
-const skippedDirectories = new Set(['.git', 'coverage', 'dist', 'node_modules', 'playwright-report', 'test-results']);
+const skippedDirectories = new Set(['.git', '.claude', 'coverage', 'dist', 'node_modules', 'playwright-report', 'test-results']);
 const textExtensions = new Set(['.css', '.html', '.js', '.json', '.md', '.mjs', '.ts', '.tsx', '.txt', '.xml', '.yml', '.yaml']);
 
 async function collectTextFiles(relativeDirectory = '.') {

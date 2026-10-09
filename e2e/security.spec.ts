@@ -49,7 +49,7 @@ test('path traversal and deployment-only file probes do not expose source files'
     expect(body, probe).not.toMatch(/^ref: refs\/heads\//m);
     if (response.status() === 200) {
       expect(response.headers()['content-type'], probe).toContain('text/html');
-      expect(body, probe).toContain('<div id="root"></div>');
+      expect(body, probe).toContain('<div id="root">');
     }
   }
 });

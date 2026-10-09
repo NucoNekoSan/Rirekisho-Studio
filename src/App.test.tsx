@@ -109,12 +109,12 @@ describe('App accessibility labels', () => {
     expect(postalCode.getAttribute('aria-describedby')).toContain(postalGuidance.id);
 
     const motivation = screen.getByLabelText('志望動機');
-    const motivationGuidance = screen.getByText('PDFに出力される欄です。応募先に見せる内容だけを書きます。').closest('.field-guidance') as HTMLElement;
+    const motivationGuidance = screen.getByText('書き出しファイルに含まれる欄です。応募先に見せる内容だけを書きます。').closest('.field-guidance') as HTMLElement;
     expect(motivationGuidance).toHaveAttribute('id');
     expect(motivation.getAttribute('aria-describedby')).toContain(motivationGuidance.id);
 
     expect(screen.getByLabelText('基本情報の入力の注意')).toBeInTheDocument();
-    expect(screen.getByText('作業メモはPDFに出ません。下書きや面接前の確認に使えます。')).toBeInTheDocument();
+    expect(screen.getByText('作業メモは書き出しファイルに含まれません。下書きや面接前の確認に使えます。')).toBeInTheDocument();
   });
 
   it('limits motivation and self PR to 350 characters with accessible counters', () => {
@@ -179,8 +179,8 @@ describe('App accessibility labels', () => {
     expect(selfPr).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('432 / 350文字')).toHaveClass('over-limit');
     expect(screen.getAllByText(/自己PRは350文字以内にしてください（現在432文字）/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toHaveAttribute('aria-disabled', 'true');
 
     fireEvent.change(selfPr, { target: { value: '自'.repeat(431) } });
     expect(selfPr).toHaveValue('自'.repeat(431));
@@ -374,7 +374,7 @@ describe('App accessibility labels', () => {
 
     expect(screen.getByRole('button', { name: '全体表示' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: '拡大表示' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByRole('button', { name: 'PDFを大きく確認' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '見本を大きく見る' })).toBeInTheDocument();
     const dialogs = screen.getAllByRole('dialog', { hidden: true });
     expect(dialogs.find((dialog) => dialog.getAttribute('aria-labelledby') === 'preview-dialog-title')).toBeInTheDocument();
     expect(dialogs.find((dialog) => dialog.getAttribute('aria-labelledby') === 'clear-dialog-title')).toBeInTheDocument();
@@ -399,33 +399,21 @@ describe('App accessibility labels', () => {
     render(<App />);
 
     expect(screen.getByText('履歴書はA4縦形式で出力します。')).toBeInTheDocument();
-    expect(screen.getByText('作業メモはPDFに出力しません。')).toBeInTheDocument();
+    expect(screen.getByText('作業メモは書き出しファイルに含めません。')).toBeInTheDocument();
     expect(screen.getByText('追加書類が無効のため、配慮事項シートは出力しません。')).toBeInTheDocument();
     expect(screen.queryByText('配慮事項シートはA4縦形式で出力します。')).not.toBeInTheDocument();
-    expect(screen.getByText('右側のPDFプレビューで内容を確認し、PDFを表示・保存してください。')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: '履歴書PDFを表示' })).toHaveLength(1);
-    expect(screen.getAllByRole('button', { name: '履歴書PDFを保存' })).toHaveLength(1);
-    expect(screen.queryByRole('button', { name: '履歴書+配慮事項PDFを表示' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '履歴書+配慮事項PDFを保存' })).not.toBeInTheDocument();
-    expect(within(screen.getByLabelText('PDF出力操作')).getAllByRole('button').map((button) => button.textContent)).toEqual([
-      'PDFを大きく確認',
-      '履歴書PDFを表示',
-      '履歴書PDFを保存',
-    ]);
+    expect(screen.getByText('右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'PDF（.pdf）' })).toBeChecked();
+    expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: '履歴書と配慮事項' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('checkbox', { name: '配慮事項シートを作成する' }));
-
     expect(screen.getByText('配慮事項シートはA4縦形式で出力します。')).toBeInTheDocument();
-    expect(screen.getByText(/配慮事項シートの出力項目: \d+件/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '履歴書+配慮事項PDFを表示' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '履歴書+配慮事項PDFを保存' })).toBeEnabled();
-    expect(within(screen.getByLabelText('PDF出力操作')).getAllByRole('button').map((button) => button.textContent)).toEqual([
-      'PDFを大きく確認',
-      '履歴書PDFを表示',
-      '履歴書PDFを保存',
-      '履歴書+配慮事項PDFを表示',
-      '履歴書+配慮事項PDFを保存',
-    ]);
+    fireEvent.click(screen.getByRole('radio', { name: '履歴書と配慮事項' }));
+    expect(screen.getByRole('button', { name: '履歴書と配慮事項PDFを保存' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: 'Word（.docx）' }));
+    expect(screen.getByRole('button', { name: '履歴書と配慮事項Wordを保存' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '履歴書と配慮事項PDFを表示' })).not.toBeInTheDocument();
   });
 
   it('lets users choose the PDF font family for preview and export', () => {
@@ -484,7 +472,7 @@ describe('App accessibility labels', () => {
     expect(screen.getByLabelText('ふりがな')).toHaveValue('さとう はなこ');
     expect(screen.getByRole('checkbox', { name: '配慮事項シートを作成する' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'A3横（1枚）' })).toBeChecked();
-    expect(screen.getByText('A3横・配慮事項付きデモを入力しました。右側のPDFプレビューで確認できます。')).toBeInTheDocument();
+    expect(screen.getByText('A3横・配慮事項付きデモを入力しました。右側の仕上がり見本で確認できます。')).toBeInTheDocument();
     expect((screen.getByLabelText('志望動機') as HTMLTextAreaElement).value).toHaveLength(350);
     expect((screen.getByLabelText('自己PR') as HTMLTextAreaElement).value).toHaveLength(350);
     expect(screen.getByLabelText('学歴・職歴18行目の内容')).toHaveValue('以上');
@@ -501,8 +489,8 @@ describe('App accessibility labels', () => {
     fireEvent.change(screen.getByLabelText('志望動機'), { target: { value: '応\n'.repeat(150) } });
 
     expect(screen.getByRole('alert')).toHaveTextContent('A4縦2ページに収まらないため、PDFを表示・保存できません');
-    expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '履歴書PDFを表示' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: '履歴書PDFを保存' })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('uses input data wording for local save and load actions', () => {
