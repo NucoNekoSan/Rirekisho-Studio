@@ -48,6 +48,7 @@ describe('downloadOfficeDocument', () => {
     expect(sheet.pageSetup.orientation).toBe('landscape');
     expect(sheet.getCell('J23').isMerged).toBe(true);
     expect(sheet.getRow(23).height).toBeLessThan(30);
-    expect(sheet.getCell('C14').value).toBe('高等学校 入学');
+    expect(sheet.getCell('C14').value).toBe('学歴');
+    expect(sheet.getCell('C15').value).toBe('高等学校 入学');
   });
 });

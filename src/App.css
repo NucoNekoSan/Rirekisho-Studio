@@ -245,6 +245,46 @@ button.ghost-danger:disabled { background: var(--color-danger); }
   margin-bottom: 14px;
 }
 
+.tutorial-start-button {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.input-tutorial {
+  min-width: 0;
+  padding: 16px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-card);
+  background: var(--color-guidance-bg);
+  color: var(--color-text-body);
+}
+
+.input-tutorial h2 {
+  margin: 4px 0 8px;
+  font-size: 1.1rem;
+  scroll-margin-top: 18px;
+}
+
+.input-tutorial h2:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+.input-tutorial p { margin: 0 0 10px; }
+
+.input-tutorial-progress {
+  color: var(--color-primary-hover);
+  font-weight: 800;
+}
+
+.input-tutorial .input-tutorial-note {
+  color: var(--color-text-desc);
+  font-size: .9rem;
+}
+
+.input-tutorial-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .application-card h2,
 .preview-sticky h2,
 .form-section h2 {

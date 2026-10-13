@@ -7,6 +7,7 @@ export type PreviewScale = 'fit' | 'large';
 export type PreviewPage = 'resume' | 'accommodation';
 
 interface PreviewPanelProps {
+  tutorial?: ReactNode;
   previewScale: PreviewScale;
   setPreviewScale: (scale: PreviewScale) => void;
   showPageTabs: boolean;
@@ -35,6 +36,7 @@ function PreviewPageFrame({ children, height }: { children: ReactNode; height: n
 }
 
 export function PreviewPanel({
+  tutorial,
   previewScale,
   setPreviewScale,
   showPageTabs,
@@ -60,6 +62,7 @@ export function PreviewPanel({
   return (
     <aside className="preview-panel" id="preview-panel" aria-labelledby="preview-panel-title">
       <div className="preview-sticky">
+        {tutorial}
         <div className="preview-heading">
           <h2 id="preview-panel-title">仕上がり見本</h2>
           <div className="preview-toolbar" role="group" aria-label="見本の表示倍率">

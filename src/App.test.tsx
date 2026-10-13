@@ -23,6 +23,27 @@ describe('App accessibility labels', () => {
     vi.useRealTimers();
   });
 
+  it('starts with a school history heading and guides input only on request', () => {
+    render(<App />);
+
+    expect(screen.getByLabelText('学歴・職歴1行目の内容')).toHaveValue('学歴');
+    expect(screen.getByLabelText('学歴・職歴1行目の年')).toHaveValue('');
+    expect(screen.queryByText('チュートリアル 1 / 7')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'チュートリアルを始める' }));
+    expect(screen.getByText('チュートリアル 1 / 7')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '基本情報を入力する' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: '次へ' }));
+    expect(screen.getByRole('heading', { name: '写真を選ぶ' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: '前へ' }));
+    expect(screen.getByRole('heading', { name: '基本情報を入力する' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: '終了' }));
+    expect(screen.queryByText('チュートリアル 1 / 7')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('学歴・職歴1行目の内容')).toHaveValue('学歴');
+    fireEvent.click(screen.getByRole('button', { name: 'チュートリアルを始める' }));
+    expect(screen.getByText('チュートリアル 1 / 7')).toBeInTheDocument();
+  }, 15_000);
+
   it('provides a skip link to the main workspace', () => {
     render(<App />);
 
@@ -362,8 +383,8 @@ describe('App accessibility labels', () => {
     fireEvent.change(screen.getByLabelText('生年月日'), { target: { value: '1999-05-12' } });
     fireEvent.change(screen.getByLabelText('現住所'), { target: { value: '東京都新宿区1-2-3' } });
     fireEvent.change(screen.getByLabelText('メールアドレス'), { target: { value: 'taro@example.com' } });
-    fireEvent.change(screen.getByLabelText('学歴・職歴1行目の年'), { target: { value: '2018' } });
-    fireEvent.change(screen.getByLabelText('学歴・職歴1行目の月'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('学歴・職歴2行目の年'), { target: { value: '2018' } });
+    fireEvent.change(screen.getByLabelText('学歴・職歴2行目の月'), { target: { value: '4' } });
 
     expect(within(basicButton).getByText('入力済み')).toBeInTheDocument();
     expect(within(historyButton).getByText('入力済み')).toBeInTheDocument();

@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import './App.css';
 import { EditableRows } from './components/EditableRows';
+import { InputTutorial } from './components/InputTutorial';
+import { tutorialSteps, type TutorialTarget } from './lib/tutorialSteps';
 import { DocumentManager } from './components/DocumentManager';
 import { FormSection, TextField, TextArea, SelectField, ToggleText } from './components/FormFields';
 import { OutputPanel } from './components/OutputPanel';
@@ -82,6 +84,7 @@ function App() {
     moveRow,
   } = useResumeEditor();
   const [activeSection, setActiveSection] = useState<SectionId>('basic');
+  const [tutorialIndex, setTutorialIndex] = useState<number | null>(null);
   const [includePhotoInProject, setIncludePhotoInProject] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -112,6 +115,7 @@ function App() {
   const previewDialogRef = useRef<HTMLDialogElement | null>(null);
   const expandedTextDialogRef = useRef<HTMLDialogElement | null>(null);
   const expandedTextOriginRef = useRef<HTMLTextAreaElement | null>(null);
+  const tutorialStartRef = useRef<HTMLButtonElement>(null);
 
   // --- 派生値（stateから算出されるUI表示用の値） ---
   const accommodationFields = useMemo(() => getAccommodationPrintFields(accommodation), [accommodation]);
@@ -241,6 +245,16 @@ function App() {
   const goToSection = (id: SectionId) => {
     setActiveSection(id);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const closeTutorial = () => {
+    setTutorialIndex(null);
+    requestAnimationFrame(() => tutorialStartRef.current?.focus());
+  };
+
+  const tutorialAt = (target: TutorialTarget) => {
+    if (tutorialIndex === null || tutorialSteps[tutorialIndex].target !== target) return null;
+    return <InputTutorial index={tutorialIndex} onPrevious={() => setTutorialIndex((current) => current === null ? null : current - 1)} onNext={() => setTutorialIndex((current) => current === null ? null : current + 1)} onClose={closeTutorial} />;
   };
 
   const enableAccommodation = () => {
@@ -514,6 +528,17 @@ function App() {
             <p>必要な場合だけ、履歴書とは別の追加書類として作成できます。</p>
           </section>
 
+          <button
+            type="button"
+            className="secondary tutorial-start-button"
+            ref={tutorialStartRef}
+            onClick={() => setTutorialIndex(0)}
+            aria-expanded={tutorialIndex !== null}
+            aria-controls="input-tutorial"
+          >
+            {tutorialIndex === null ? 'チュートリアルを始める' : 'チュートリアルを最初から見る'}
+          </button>
+
           <DocumentManager
             consent={storageConsent}
             documents={savedDocuments}
@@ -571,6 +596,7 @@ function App() {
           {statusMessage ? <div className="notice" role="status">{statusMessage}</div> : null}
           {errorMessage ? <div className="alert" role="alert">{errorMessage}</div> : null}
 
+          {tutorialAt('basic')}
           <FormSection
               id="basic"
               title="基本情報"
@@ -615,6 +641,7 @@ function App() {
               </div>
           </FormSection>
 
+          {tutorialAt('photo')}
           <FormSection id="photo" title="写真" description={`JPG/JPEG形式、${PHOTO_MAX_FILE_SIZE_MB}MB以下の写真を取り込めます。`} status={sectionStatus('photo')}>
               <div className="photo-editor">
                 <div className="photo-preview" aria-label="写真プレビュー">
@@ -631,6 +658,7 @@ function App() {
               </div>
           </FormSection>
 
+          {tutorialAt('history')}
           <FormSection
               id="history"
               title="学歴・職歴"
@@ -643,6 +671,7 @@ function App() {
               <EditableRows rows={resume.histories} groupLabel="学歴・職歴" alignmentKind="histories" alignments={resume.textAlignments} showAlignmentControls={historyFormattingVisible} onAlignmentChange={updateResumeAlignment} onChange={updateHistory} onAdd={addHistory} onRemove={(id) => removeRow('histories', id)} onMove={(id, direction) => moveRow('histories', id, direction)} addLabel="学歴・職歴を追加" onKeyDown={gridKeyDown} />
           </FormSection>
 
+          {tutorialAt('license')}
           <FormSection
               id="license"
               title="免許・資格"
@@ -655,6 +684,7 @@ function App() {
               <EditableRows rows={resume.qualifications} groupLabel="免許・資格" alignmentKind="qualifications" alignments={resume.textAlignments} showAlignmentControls={licenseFormattingVisible} onAlignmentChange={updateResumeAlignment} onChange={updateQualification} onAdd={addQualification} onRemove={(id) => removeRow('qualifications', id)} onMove={(id, direction) => moveRow('qualifications', id, direction)} addLabel="免許・資格を追加" onKeyDown={gridKeyDown} />
           </FormSection>
 
+          {tutorialAt('appeal')}
           <FormSection
               id="appeal"
               title="志望動機・本人希望"
@@ -712,6 +742,7 @@ function App() {
               )}
           </FormSection>
 
+          {tutorialAt('output')}
           <FormSection id="output" title="保存・ファイル出力" description="サーバーには保存しません。必要な場合は入力データをダウンロードしてください。">
               <OutputPanel
                 resume={resume}
@@ -736,6 +767,7 @@ function App() {
         </section>
 
         <PreviewPanel
+          tutorial={tutorialAt('preview-panel')}
           previewScale={previewScale}
           setPreviewScale={setPreviewScale}
           showPageTabs={hasAccommodation}

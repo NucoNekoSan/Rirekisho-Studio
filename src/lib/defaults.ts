@@ -28,6 +28,7 @@ export const createDefaultResume = (): ResumeData => ({
     contactPhone: '',
   },
   histories: [
+    { id: id(), year: '', month: '', text: '学歴' },
     { id: id(), year: '', month: '', text: '高等学校 入学' },
     { id: id(), year: '', month: '', text: '高等学校 卒業' },
     { id: id(), year: '', month: '', text: '職歴' },
