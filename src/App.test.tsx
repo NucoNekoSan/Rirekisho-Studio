@@ -34,7 +34,8 @@ describe('App accessibility labels', () => {
       expect(screen.getByRole('heading', { name: '架空の基本情報を編集する' })).toBeInTheDocument();
       expect(screen.getByLabelText('氏名')).toHaveValue('山田 太郎');
       expect(screen.queryByText('この端末への保存')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: '入力データを保存' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '入力データを保存' })).toBeInTheDocument();
+      expect(screen.queryByLabelText('入力データを読込')).not.toBeInTheDocument();
       fireEvent.change(screen.getByLabelText('氏名'), { target: { value: '練習中' } });
       expect(screen.getByLabelText('氏名')).toHaveValue('練習中');
       fireEvent.click(screen.getByRole('button', { name: 'デモを最初から' }));

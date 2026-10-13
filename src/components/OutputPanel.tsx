@@ -148,9 +148,13 @@ export function OutputPanel({
         </div> : null}
         <p className="output-guidance">右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。</p>
       </div>
-      {!demo ? <div className="output-card">
+      <div className="output-card">
         <h3>入力データ保存</h3>
-        <p>入力内容をJSONファイルとして保存できます。JSONと本アプリが新しく出力したWord・Excelをこの画面へ読み込めます。</p>
+        {demo ? (
+          <p>架空の入力内容をJSONファイルとして保存できます。ファイル名には demo- が付きます。</p>
+        ) : (
+          <p>入力内容をJSONファイルとして保存できます。JSONと本アプリが新しく出力したWord・Excelをこの画面へ読み込めます。</p>
+        )}
         {hasAccommodation ? (
           <p className="warning-text">配慮事項シートを有効にしているため、その入力内容もJSONファイルに含まれます。</p>
         ) : (
@@ -162,9 +166,9 @@ export function OutputPanel({
         {includeOfficeSourceInProject && hasOfficeSource ? <p className="warning-text">Office原本には写真や非表示情報が残っている場合があります。「写真も入力データに含める」がオフでもJSONから取り出せます。</p> : null}
         <div className="button-row">
           <button type="button" onClick={saveProject}>入力データを保存</button>
-          <label className="file-button secondary">入力データを読込<input type="file" accept="application/json,.json,.docx,.xlsx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={loadProject} /></label>
+          {!demo ? <label className="file-button secondary">入力データを読込<input type="file" accept="application/json,.json,.docx,.xlsx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={loadProject} /></label> : null}
         </div>
-      </div> : null}
+      </div>
       {!demo ? <div className="output-card danger-zone">
         <h3>データ初期化</h3>
         <p>保存していない入力内容、取り込んだ写真、作成中の配慮事項をこの画面から消します。</p>

@@ -399,7 +399,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
   const saveProject = () => {
     const text = serializeProjectFile(state, includePhotoInProject, documentId, documentName,
       includeOfficeSourceInProject ? officeSource : undefined);
-    downloadTextFile('rirekisho-studio-project.json', text);
+    downloadTextFile(isDemo ? 'demo-rirekisho-studio-project.json' : 'rirekisho-studio-project.json', text);
     const photoMessage = includePhotoInProject ? '写真あり' : '写真なし';
     const accommodationMessage = hasAccommodation ? '配慮事項あり' : '配慮事項なし';
     setStatusMessage(`入力データを保存しました（${photoMessage}、${accommodationMessage}）。`);
