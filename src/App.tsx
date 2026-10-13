@@ -750,6 +750,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
               </div>
           </FormSection>
 
+          {tutorialAt('accommodation')}
           <FormSection
               id="accommodation"
               title="配慮事項シート"

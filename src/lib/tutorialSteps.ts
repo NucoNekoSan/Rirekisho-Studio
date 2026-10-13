@@ -1,4 +1,4 @@
-export type TutorialTarget = 'basic' | 'photo' | 'history' | 'license' | 'appeal' | 'preview-panel' | 'output';
+export type TutorialTarget = 'basic' | 'photo' | 'history' | 'license' | 'appeal' | 'accommodation' | 'preview-panel' | 'output';
 
 export type TutorialStep = { target: TutorialTarget; title: string; description: string };
 
@@ -8,6 +8,7 @@ export const demoTutorialSteps: readonly TutorialStep[] = [
   { target: 'history', title: '学歴・職歴の行を編集する', description: '学校名や年月を書き換え、行の追加・移動・削除を試してください。試す順番は自由です。' },
   { target: 'license', title: '免許・資格を編集する', description: '資格名や取得年月を書き換え、必要なら行を追加してみてください。' },
   { target: 'appeal', title: '文章を編集する', description: '志望動機や自己PRを編集します。「大きく編集」も試せます。作業メモは出力に含まれません。' },
+  { target: 'accommodation', title: '配慮事項シートを試す（任意）', description: '左上の「配慮事項シートを作成する」にチェックを入れると、障害名・通院状況などを追加書類として入力できます。機微情報の項目はトグルでON/OFFでき、OFFの項目は出力に含まれません。試したらチェックを外せば元に戻せます。' },
   { target: 'preview-panel', title: '仕上がり見本を操作する', description: '全体表示・拡大表示を切り替え、入力した内容と用紙への収まりを確認してください。' },
   { target: 'output', title: 'デモのファイルを保存する', description: '用紙形式を切り替え、仕上がり見本の書き出しからPDF・Word・Excelを保存できます。ファイル名にはdemo-が付きます。' },
   { target: 'output', title: '入力データを保存する', description: '画面下の「入力データ保存」から、架空の入力内容をJSONファイルとして保存できます。ファイル名には demo- が付きます。実際の編集画面では、保存したWord・Excelを編集して「入力データを読込」から読み込むと、変更した文字や写真、追加した行が自動で反映されます。' },
