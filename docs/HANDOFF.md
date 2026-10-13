@@ -67,3 +67,42 @@
 - 本番5ルートの表示・CSP、A4/A3のPDF・Word・Excel計6ファイルの保存、端末保存と再読込、マニュアル導線を確認。未処理JavaScript例外なし。
 - 配備前から開いていたPWAの更新通知・更新適用・更新後のオフラインマニュアルを確認。
 - この本番確認記録の後続コミットはアプリ・公開資産を変更しない。
+
+## Word/Excel往復インポートとデモ拡充（2026-10-13）
+
+### 統合対象
+
+mainに積んだコミット（`f0f1621`以降、`c8cdc49`まで）:
+
+- `f5c4172` Word/Excel往復インポート機能。アプリが生成した`.docx`/`.xlsx`を編集して「入力データを読込」から読み込むと、変更した文字・学歴職歴/資格の行・JPEG写真が入力欄に反映される。Word側はブックマーク、Excel側は定義された名前をフィールドのアンカーとして使用（`src/browser/officePackage.ts`、`src/lib/officeAnchor.ts`）。この作業は元々Codexが未コミットのまま残していたもので、ビルド・型検査・lint・既存テストがすべて成功していることを確認した上で引き継ぎ、1件のみ残っていた無関係なテストの文字列アサーションのずれ（`src/App.test.tsx`）を直して完了させた。
+- `1142826` 未追跡だった`.claude/`を`.gitignore`へ追加（Claude Code自身の設定ディレクトリで、配布・統合対象外）。
+- `2b09a4d` 本番で確認したCSPブロックを修正。`script-src`/`connect-src`にCloudflareの計測ビーコン（`static.cloudflareinsights.com`／`cloudflareinsights.com`）だけを個別に許可（ワイルドカードや`unsafe-*`は使用しない）。
+- `2d7d0c5` デモ(`/demo`)チュートリアルの最終ステップと、マニュアル第6章・目次・FAQ（`docs/manual/draft/`・`public/manual/`両方）に往復インポート機能の説明を反映。
+- `b089dee` デモでも「入力データ保存」操作を実際に試せるように変更。保存ボタン・写真チェックボックスはデモで表示し、読込ボタンとデータ初期化カードは引き続き非表示のまま。保存時のファイル名にデモでは`demo-`接頭辞が付くよう統一。
+- `c8cdc49` デモに「配慮事項シートを試す（任意）」ステップを追加。従来、基本情報・写真・学歴職歴・免許資格・志望動機・出力の各セクションにはチュートリアルステップがあったが、配慮事項シートのセクションだけ案内が無かったため追加。
+
+### 検証記録
+
+- Node.js環境（Windows）、Chromium（Playwright）で検証。
+- `npm test`: 146/146成功。`npm run lint`（oxlint）: エラー無し。`npm run build`（`tsc -b && vite build`）: 成功。
+- `npm run check:docs`・`npm run check:deploy`・`npm run check:security`: いずれも成功。
+- E2E: `e2e/office-export.spec.ts`（往復インポート含む7件）、`e2e/security.spec.ts`・`e2e/manual.spec.ts`（CSPヘッダー検証含む9件）、いずれも成功。
+- 各コミットのデプロイ後、本番（`https://resume.nuconeko-garden.com`）に対しPlaywrightで実機確認: Word往復インポート（書き出し→編集→再読込→反映）、CSPヘッダーの実値とコンソールエラー解消、デモの「入力データ保存」操作（`demo-rirekisho-studio-project.json`のダウンロード）、デモの配慮事項シート展開。
+
+### 配備・復旧
+
+- 公開URL: `https://resume.nuconeko-garden.com/`。
+- 手動配備: 認証済みCloudflare環境（アカウント`nuconekosan@gmail.com`）で`npm run deploy`（`npm run build && wrangler deploy`）。SPA配信とカスタムドメインは`wrangler.jsonc`、CSPは`public/_headers`。
+- 最終配備のCloudflare Workerバージョン: `d46efbe3-06bd-4337-8ab9-27125ab74ead`（コミット`c8cdc49`相当、Worker名`rirekisho-studio`）。
+- 障害時の復旧方針は既存章と同様（`git revert -m 1 <merge-commit>`等）。force pushや利用者のIndexedDB削除は行わない。
+
+### 既知の制限・今後の候補（更新）
+
+- Word・Excelの往復インポート機能は実装済みで本番動作確認済み。従来この章の冒頭付近に記載していた「Word・Excelをアプリへ読み戻す機能はない」という記述は本リリースで解消された。
+- デモの往復インポートは「保存」操作のみ体験可能。「読込」（往復インポートのフル体験）はデモの安全性（実データ上書きを避ける設計）を優先し、意図的に対象外のまま。
+- 「書式設定（文字揃え）」トグルは各入力セクションに存在するが、デモチュートリアルの専用ステップはまだ無い（既存ステップ内で発見可能なため優先度を下げて保留）。次にチュートリアルを拡充する場合の候補。
+
+### 現在の状態
+
+- `main`は`origin/main`と同期済み（2026-10-13時点、最新コミット`c8cdc49`）。
+- 作業ツリーはクリーンで、未コミット・保留中の作業は無い。
