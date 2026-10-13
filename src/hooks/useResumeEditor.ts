@@ -31,8 +31,8 @@ const validateBasicField = (key: keyof BasicInfo, value: string): string => {
   }
 };
 
-export function useResumeEditor() {
-  const [state, setState] = useState(() => createDefaultState());
+export function useResumeEditor(createInitialState = createDefaultState) {
+  const [state, setState] = useState(createInitialState);
   const [basicFieldErrors, setBasicFieldErrors] = useState<BasicFieldErrorMap>({});
   const resume = state.resume;
   const accommodation = state.accommodation;

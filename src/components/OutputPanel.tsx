@@ -20,6 +20,7 @@ const pdfPaperOptions: Array<{ value: PdfPaperFormat; label: string }> = [
 ];
 
 interface OutputPanelProps {
+  demo?: boolean;
   resume: ResumeData;
   accommodation: AccommodationData;
   resumePaperFormatLabel: string;
@@ -40,6 +41,7 @@ interface OutputPanelProps {
 }
 
 export function OutputPanel({
+  demo = false,
   resume,
   accommodation,
   resumePaperFormatLabel,
@@ -124,16 +126,16 @@ export function OutputPanel({
             ))}
           </div>
         </fieldset>
-        <div className="demo-check-action">
+        {!demo ? <div className="demo-check-action">
           <p>確認用デモとして、履歴書と配慮事項シートを入力できます。</p>
           <div className="demo-check-buttons">
             <button type="button" className="secondary" onClick={() => applyDisabilityEmploymentDemo('a4-portrait')}>A4縦・配慮事項付きデモを入力</button>
             <button type="button" className="secondary" onClick={() => applyDisabilityEmploymentDemo('a3-landscape')}>A3横・配慮事項付きデモを入力</button>
           </div>
-        </div>
+        </div> : null}
         <p className="output-guidance">右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。</p>
       </div>
-      <div className="output-card">
+      {!demo ? <div className="output-card">
         <h3>入力データ保存</h3>
         <p>入力内容をJSONファイルとして保存し、後からこの画面に読み込めます。</p>
         {hasAccommodation ? (
@@ -147,14 +149,14 @@ export function OutputPanel({
           <button type="button" onClick={saveProject}>入力データを保存</button>
           <label className="file-button secondary">入力データを読込<input type="file" accept="application/json,.json" onChange={loadProject} /></label>
         </div>
-      </div>
-      <div className="output-card danger-zone">
+      </div> : null}
+      {!demo ? <div className="output-card danger-zone">
         <h3>データ初期化</h3>
         <p>保存していない入力内容、取り込んだ写真、作成中の配慮事項をこの画面から消します。</p>
         <div className="button-row">
           <button type="button" className="danger" onClick={onClear}>入力をすべて消去</button>
         </div>
-      </div>
+      </div> : null}
     </div>
   );
 }

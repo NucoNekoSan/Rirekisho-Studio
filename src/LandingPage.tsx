@@ -27,8 +27,10 @@ export function LandingPage() {
           <p className="landing-lead">Rirekisho Studioは、日本向けの履歴書を作成し、A4・A3のPDFや編集可能なWord・Excelとして保存できる無料アプリです。個人情報はCloudflareや運営者のサーバーへ保存しません。</p>
           <div className="landing-actions">
             <Link className="landing-primary" to="/app">履歴書を作成する</Link>
+            <Link className="landing-secondary" to="/demo">操作デモを試す</Link>
             <a className="landing-secondary" href={sitePath('manual/')}>使い方を見る</a>
           </div>
+          <p className="landing-demo-note">操作デモでは架空の履歴書を使って入力からファイル保存まで試せます。練習内容は端末内の履歴書に保存されません。</p>
           <p className="landing-note">アカウント登録不要・ブラウザだけで利用できます</p>
         </section>
 

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { createDefaultState } from './lib/defaults';
 import { serializeProjectFile } from './lib/projectFile';
+import { resumeRepository } from './lib/resumeRepository';
 
 const stubPostalLookup = (address3 = '新宿') => {
   const fetchMock = vi.fn().mockResolvedValue({
@@ -20,8 +21,32 @@ const stubPostalLookup = (address3 = '新宿') => {
 describe('App accessibility labels', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
+
+  it('keeps the editable sample separate from saved resumes', () => {
+    localStorage.setItem('rirekisho-studio:storage-consent', 'device-storage');
+    const save = vi.spyOn(resumeRepository, 'save');
+    const list = vi.spyOn(resumeRepository, 'list');
+    try {
+      render(<App mode="demo" />);
+      expect(screen.getByRole('heading', { name: '架空の基本情報を編集する' })).toBeInTheDocument();
+      expect(screen.getByLabelText('氏名')).toHaveValue('山田 太郎');
+      expect(screen.queryByText('この端末への保存')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '入力データを保存' })).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('氏名'), { target: { value: '練習中' } });
+      expect(screen.getByLabelText('氏名')).toHaveValue('練習中');
+      fireEvent.click(screen.getByRole('button', { name: 'デモを最初から' }));
+      expect(screen.getByLabelText('氏名')).toHaveValue('山田 太郎');
+      expect(screen.getByRole('link', { name: '新しい履歴書を作成する' })).toHaveAttribute('href', '/app');
+      expect(localStorage.getItem('rirekisho-studio:storage-consent')).toBe('device-storage');
+      expect(save).not.toHaveBeenCalled();
+      expect(list).not.toHaveBeenCalled();
+    } finally {
+      localStorage.removeItem('rirekisho-studio:storage-consent');
+    }
+  }, 15_000);
 
   it('starts with a school history heading and guides input only on request', () => {
     render(<App />);

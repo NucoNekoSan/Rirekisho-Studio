@@ -4,7 +4,7 @@ import type { ChangeEvent } from 'react';
 import './App.css';
 import { EditableRows } from './components/EditableRows';
 import { InputTutorial } from './components/InputTutorial';
-import { tutorialSteps, type TutorialTarget } from './lib/tutorialSteps';
+import { demoTutorialSteps, tutorialSteps, type TutorialTarget } from './lib/tutorialSteps';
 import { DocumentManager } from './components/DocumentManager';
 import { FormSection, TextField, TextArea, SelectField, ToggleText } from './components/FormFields';
 import { OutputPanel } from './components/OutputPanel';
@@ -13,7 +13,7 @@ import { PreviewPanel, type PreviewPage, type PreviewScale } from './components/
 import { getAccommodationPrintFields } from './lib/accommodation';
 import { PHOTO_ACCEPTED_EXTENSIONS, PHOTO_MAX_FILE_SIZE_MB, RESUME_APPEAL_MAX_LENGTH } from './lib/config';
 import { calculateAgeFromDateInput } from './lib/dateFormat';
-import { createDefaultState, createDisabilityEmploymentDemoState } from './lib/defaults';
+import { createDefaultState, createDisabilityEmploymentDemoState, createGeneralDemoState } from './lib/defaults';
 import { downloadPdfFromElements, openPdfFromElements, type PdfSourceElement } from './browser/pdfRenderer';
 import { processPhotoFile, rotatePhotoClockwise } from './browser/photoLoader';
 import { downloadTextFile } from './browser/downloadFile';
@@ -59,7 +59,9 @@ const appealLengthError = (label: string, value: string) => (
     : ''
 );
 
-function App() {
+function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
+  const isDemo = mode === 'demo';
+  const activeTutorialSteps = isDemo ? demoTutorialSteps : tutorialSteps;
   // --- アプリケーション状態 ---
   const {
     state,
@@ -82,16 +84,17 @@ function App() {
     addQualification,
     removeRow,
     moveRow,
-  } = useResumeEditor();
+  } = useResumeEditor(isDemo ? createGeneralDemoState : createDefaultState);
   const [activeSection, setActiveSection] = useState<SectionId>('basic');
-  const [tutorialIndex, setTutorialIndex] = useState<number | null>(null);
+  const [tutorialIndex, setTutorialIndex] = useState<number | null>(isDemo ? 0 : null);
+  const [demoResetCount, setDemoResetCount] = useState(0);
   const [includePhotoInProject, setIncludePhotoInProject] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isGeneratingOffice, setIsGeneratingOffice] = useState(false);
   const [storageConsent, setStorageConsent] = useState<LocalStorageConsent>(() =>
-    localStorage.getItem('rirekisho-studio:storage-consent') === 'device-storage' ? 'device-storage' : 'memory-only');
+    !isDemo && localStorage.getItem('rirekisho-studio:storage-consent') === 'device-storage' ? 'device-storage' : 'memory-only');
   const [documentId, setDocumentId] = useState<string>(() => crypto.randomUUID());
   const [documentName, setDocumentName] = useState('名称未設定の履歴書');
   const [savedDocuments, setSavedDocuments] = useState<ResumeDocumentMetadata[]>([]);
@@ -253,8 +256,20 @@ function App() {
   };
 
   const tutorialAt = (target: TutorialTarget) => {
-    if (tutorialIndex === null || tutorialSteps[tutorialIndex].target !== target) return null;
-    return <InputTutorial index={tutorialIndex} onPrevious={() => setTutorialIndex((current) => current === null ? null : current - 1)} onNext={() => setTutorialIndex((current) => current === null ? null : current + 1)} onClose={closeTutorial} />;
+    if (tutorialIndex === null || activeTutorialSteps[tutorialIndex].target !== target) return null;
+    return <InputTutorial index={tutorialIndex} steps={activeTutorialSteps} demo={isDemo} onPrevious={() => setTutorialIndex((current) => current === null ? null : current - 1)} onNext={() => setTutorialIndex((current) => current === null ? null : current + 1)} onClose={closeTutorial} />;
+  };
+
+  const restartDemo = () => {
+    setState(createGeneralDemoState());
+    setTutorialIndex(0);
+    setActiveSection('basic');
+    setPreviewPage('resume');
+    setPreviewScale('fit');
+    setVisibleFormattingSections({});
+    setDemoResetCount((current) => current + 1);
+    resetEphemeralState(true);
+    setStatusMessage('架空データを最初の状態に戻しました。');
   };
 
   const enableAccommodation = () => {
@@ -271,11 +286,11 @@ function App() {
   };
 
   useEffect(() => {
-    if (storageConsent === 'device-storage') void refreshSavedDocuments();
-  }, [storageConsent]);
+    if (!isDemo && storageConsent === 'device-storage') void refreshSavedDocuments();
+  }, [isDemo, storageConsent]);
 
   useEffect(() => {
-    if (storageConsent !== 'device-storage') return;
+    if (isDemo || storageConsent !== 'device-storage') return;
     const timer = window.setTimeout(async () => {
       const timestamp = new Date().toISOString();
       const result = await resumeRepository.save({
@@ -293,9 +308,10 @@ function App() {
       }
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [state, storageConsent, documentId, documentName]);
+  }, [state, storageConsent, documentId, documentName, isDemo]);
 
   const changeStorageConsent = (consent: LocalStorageConsent) => {
+    if (isDemo) return;
     setStorageConsent(consent);
     localStorage.setItem('rirekisho-studio:storage-consent', consent);
     setStatusMessage(consent === 'device-storage'
@@ -455,10 +471,11 @@ function App() {
       const fileName = includeAccommodation
         ? (resumePaperFormat === 'a3-landscape' ? 'rirekisho-a3-and-accommodation.pdf' : 'rirekisho-and-accommodation.pdf')
         : (resumePaperFormat === 'a3-landscape' ? 'rirekisho-a3.pdf' : 'rirekisho.pdf');
+      const downloadName = isDemo ? `demo-${fileName}` : fileName;
       if (mode === 'open') {
-        await openPdfFromElements(elements, fileName);
+        await openPdfFromElements(elements, downloadName);
       } else {
-        await downloadPdfFromElements(elements, fileName);
+        await downloadPdfFromElements(elements, downloadName);
       }
       setStatusMessage('PDFを生成しました。');
     } catch (error) {
@@ -473,7 +490,7 @@ function App() {
     setErrorMessage('');
     try {
       const { downloadOfficeDocument } = await import('./browser/officeRenderer');
-      await downloadOfficeDocument(format, resume, accommodation, includeAccommodation);
+      await downloadOfficeDocument(format, resume, accommodation, includeAccommodation, isDemo ? 'demo-' : '');
       setStatusMessage(`${format === 'docx' ? 'Word' : 'Excel'}ファイルを保存しました。`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'ファイルを生成できませんでした。');
@@ -499,12 +516,12 @@ function App() {
 
   // --- JSX描画 ---
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isDemo ? 'demo-mode' : ''}`}>
       <a className="skip-link" href="#main-content">入力フォームへスキップ</a>
       <header className="app-header">
         <div>
           <h1><a className="app-brand" href={sitePath('')}>Rirekisho Studio</a></h1>
-          <p className="header-copy">日本向けの履歴書を、端末の中だけで安全に作成できます。</p>
+          <p className="header-copy">{isDemo ? '架空データを使って、履歴書の操作を練習できます。' : '日本向けの履歴書を、端末の中だけで安全に作成できます。'}</p>
         </div>
         <nav aria-label="サービス情報">
           <a href={sitePath('manual/')}>使い方</a>
@@ -512,6 +529,19 @@ function App() {
           <a href={sitePath('terms')}>利用規約</a>
         </nav>
       </header>
+
+      {isDemo ? (
+        <section className="demo-banner" aria-label="操作デモの案内">
+          <div>
+            <strong>練習用の操作デモ</strong>
+            <p>架空の履歴書を自由に編集できます。変更内容は端末内の履歴書に保存されず、画面を離れると消えます。</p>
+          </div>
+          <div className="demo-banner-actions">
+            <button type="button" className="secondary" onClick={restartDemo}>デモを最初から</button>
+            <a href={sitePath('app')}>新しい履歴書を作成する</a>
+          </div>
+        </section>
+      ) : null}
 
       <main id="main-content" className="workspace" tabIndex={-1}>
         <aside className="side-panel" aria-label="作成メニュー">
@@ -536,10 +566,10 @@ function App() {
             aria-expanded={tutorialIndex !== null}
             aria-controls="input-tutorial"
           >
-            {tutorialIndex === null ? 'チュートリアルを始める' : 'チュートリアルを最初から見る'}
+            {tutorialIndex === null ? (isDemo ? '操作案内を始める' : 'チュートリアルを始める') : (isDemo ? '操作案内を最初から見る' : 'チュートリアルを最初から見る')}
           </button>
 
-          <DocumentManager
+          {!isDemo ? <DocumentManager
             consent={storageConsent}
             documents={savedDocuments}
             currentId={documentId}
@@ -551,7 +581,7 @@ function App() {
             onDuplicate={duplicateDocument}
             onDelete={deleteDocument}
             onClear={clearSavedDocuments}
-          />
+          /> : null}
 
           <nav className="section-nav" aria-label="入力セクション">
             {sections.map((section) => {
@@ -743,8 +773,9 @@ function App() {
           </FormSection>
 
           {tutorialAt('output')}
-          <FormSection id="output" title="保存・ファイル出力" description="サーバーには保存しません。必要な場合は入力データをダウンロードしてください。">
+          <FormSection id="output" title="保存・ファイル出力" description={isDemo ? '架空データをPDF・Word・Excelとして保存し、ファイルの見た目を試せます。' : 'サーバーには保存しません。必要な場合は入力データをダウンロードしてください。'}>
               <OutputPanel
+                demo={isDemo}
                 resume={resume}
                 accommodation={accommodation}
                 resumePaperFormatLabel={resumePaperFormatLabel}
@@ -767,6 +798,7 @@ function App() {
         </section>
 
         <PreviewPanel
+          key={isDemo ? demoResetCount : undefined}
           tutorial={tutorialAt('preview-panel')}
           previewScale={previewScale}
           setPreviewScale={setPreviewScale}

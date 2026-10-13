@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { tutorialSteps } from '../lib/tutorialSteps';
+import type { TutorialStep } from '../lib/tutorialSteps';
 
-export function InputTutorial({ index, onPrevious, onNext, onClose }: {
+export function InputTutorial({ index, steps, demo = false, onPrevious, onNext, onClose }: {
   index: number;
+  steps: readonly TutorialStep[];
+  demo?: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onClose: () => void;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const step = tutorialSteps[index];
+  const step = steps[index];
 
   useEffect(() => {
     titleRef.current?.scrollIntoView?.({ block: 'start' });
@@ -24,15 +26,15 @@ export function InputTutorial({ index, onPrevious, onNext, onClose }: {
 
   return (
     <section className="input-tutorial" id="input-tutorial" aria-labelledby="tutorial-step-title">
-      <p className="input-tutorial-progress">チュートリアル {index + 1} / {tutorialSteps.length}</p>
+      <p className="input-tutorial-progress">{demo ? '操作デモ' : 'チュートリアル'} {index + 1} / {steps.length}</p>
       <h2 id="tutorial-step-title" ref={titleRef} tabIndex={-1}>{step.title}</h2>
       <p>{step.description}</p>
-      <p className="input-tutorial-note">この案内は入力内容を変更しません。いつでも終了できます。</p>
+      <p className="input-tutorial-note">{demo ? '操作は自由です。練習内容は端末内の履歴書に保存されません。' : 'この案内は入力内容を変更しません。'}いつでも終了できます。</p>
       <div className="input-tutorial-actions">
         <button type="button" className="secondary compact-button" onClick={focusTarget}>操作箇所へ移動</button>
         <button type="button" className="secondary compact-button" onClick={onPrevious} disabled={index === 0}>前へ</button>
-        <button type="button" className="compact-button" onClick={index === tutorialSteps.length - 1 ? onClose : onNext}>
-          {index === tutorialSteps.length - 1 ? '完了' : '次へ'}
+        <button type="button" className="compact-button" onClick={index === steps.length - 1 ? onClose : onNext}>
+          {index === steps.length - 1 ? '完了' : '次へ'}
         </button>
         <button type="button" className="secondary compact-button" onClick={onClose}>終了</button>
       </div>

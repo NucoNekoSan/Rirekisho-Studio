@@ -51,4 +51,10 @@ describe('downloadOfficeDocument', () => {
     expect(sheet.getCell('C14').value).toBe('学歴');
     expect(sheet.getCell('C15').value).toBe('高等学校 入学');
   });
+
+  it('marks a practice download as a demo file', async () => {
+    const { resume, accommodation } = createDefaultState();
+    await downloadOfficeDocument('docx', resume, accommodation, false, 'demo-');
+    expect(vi.mocked(downloadBlob).mock.lastCall?.[1]).toBe('demo-rirekisho.docx');
+  });
 });

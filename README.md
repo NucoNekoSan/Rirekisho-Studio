@@ -17,6 +17,7 @@
 - 用途別の複数履歴書、複製、名前変更、削除
 - schema v2 JSON書き出し・読込とschema v1互換読込
 - PWA、キーボード操作、オフラインマニュアル
+- 架空データで入力とPDF・Word・Excelの保存を試せる操作デモ
 
 ## Privacy Boundary
 

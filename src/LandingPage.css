@@ -13,6 +13,7 @@
 .landing-primary { background: var(--studio-green); color: white; }
 .landing-secondary { color: var(--studio-green); }
 .landing-note { color: #63706b; font-size: .85rem; }
+.landing-demo-note { max-width: 680px; margin: 16px 0 0; color: #46554f; font-size: .95rem; line-height: 1.7; }
 .landing-section { padding: 90px max(32px, calc((100vw - 1040px) / 2)); background: white; }
 .landing-section > h2, .privacy-section h2, .landing-cta h2 { max-width: 720px; margin: 14px 0 42px; font: 700 clamp(2rem, 4vw, 3.4rem)/1.3 Georgia, "Noto Serif JP", serif; }
 .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--studio-line); border: 1px solid var(--studio-line); }

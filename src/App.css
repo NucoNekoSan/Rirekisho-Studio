@@ -200,6 +200,39 @@ button.ghost-danger:disabled { background: var(--color-danger); }
   max-width: 760px;
 }
 
+.demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--color-notice-border);
+  background: var(--color-notice-bg);
+}
+
+.demo-banner strong { color: var(--color-primary-hover); font-size: 1.1rem; }
+.demo-banner p { margin: 4px 0 0; }
+.demo-banner-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.demo-banner-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.demo-banner-actions a:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+@media (max-width: 820px) {
+  .demo-banner { align-items: stretch; flex-direction: column; padding: 16px 18px; }
+  .demo-banner-actions > * { flex: 1 1 180px; }
+}
+
 .section-nav button {
   background: var(--color-bg-surface);
   color: var(--color-primary);
