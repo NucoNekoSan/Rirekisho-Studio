@@ -6,6 +6,7 @@ import { HISTORY_LAYOUT, splitResumeHistory } from './resumeFixedLayout';
 import type { AccommodationData, DatedEntry, PdfPaperFormat, ResumeData, TextAlignment } from './types';
 
 export interface OfficeField {
+  key: string;
   label: string;
   value: string;
   alignment: TextAlignment;
@@ -48,6 +49,7 @@ export function buildOfficeExportData(
 ): OfficeExportData {
   const basic = resume.basic;
   const field = (label: string, value: string, key: string): OfficeField => ({
+    key,
     label,
     value,
     alignment: getTextAlignment(resume.textAlignments, key),

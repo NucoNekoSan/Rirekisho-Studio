@@ -57,4 +57,5 @@
 
 - `officeExportData.test.ts`: 非公開メモ・非表示性別・機微項目の除外と学歴・職歴の続きページ。
 - `officeRenderer.test.ts`: 編集可能なOOXMLパッケージ、セル、結合範囲、印刷範囲の確認。
+- `officeRenderer.test.ts`: Word・Excelの編集値、行、非表示情報、再書き出しと書式保持の往復確認。
 - `e2e/office-export.spec.ts`: A4・A3、配慮事項の選択、写真を含むファイル、31行の学歴・職歴の欠落防止、非公開内容の除外、WordのセクションとExcelの用紙・印刷範囲を確認。

@@ -433,7 +433,7 @@ describe('App accessibility labels', () => {
     render(<App />);
 
     expect(screen.getByText('履歴書はA4縦形式で出力します。')).toBeInTheDocument();
-    expect(screen.getByText('作業メモは書き出しファイルに含めません。')).toBeInTheDocument();
+    expect(screen.getByText('作業メモは通常の書き出しファイルに含めません。')).toBeInTheDocument();
     expect(screen.getByText('追加書類が無効のため、配慮事項シートは出力しません。')).toBeInTheDocument();
     expect(screen.queryByText('配慮事項シートはA4縦形式で出力します。')).not.toBeInTheDocument();
     expect(screen.getByText('右側の仕上がり見本を確認し、保存形式と内容を選んで書き出します。Word・Excelは保存後に印刷プレビューでページ配置を確認してください。')).toBeInTheDocument();

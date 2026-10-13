@@ -28,7 +28,7 @@ import { useResumeEditor } from './hooks/useResumeEditor';
 import { getResumeSectionStatus, sectionStatusClass, type SectionStatus } from './lib/sectionStatus';
 import { applyTextLengthLimit } from './lib/textInput';
 import { sitePath } from './lib/sitePath';
-import type { LocalStorageConsent, PdfPaperFormat, ResumeDocumentMetadata } from './lib/types';
+import type { LocalStorageConsent, OfficeSource, PdfPaperFormat, ResumeDocumentMetadata } from './lib/types';
 
 /** 左メニューに表示するセクション一覧（表示順＝この配列の順序） */
 const sections = [
@@ -88,6 +88,9 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
   const [tutorialIndex, setTutorialIndex] = useState<number | null>(isDemo ? 0 : null);
   const [demoResetCount, setDemoResetCount] = useState(0);
   const [includePhotoInProject, setIncludePhotoInProject] = useState(false);
+  const [includePrivateDataInOffice, setIncludePrivateDataInOffice] = useState(false);
+  const [includeOfficeSourceInProject, setIncludeOfficeSourceInProject] = useState(false);
+  const [officeSource, setOfficeSource] = useState<OfficeSource | undefined>();
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -298,6 +301,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
         createdAt: state.resume.createdAt || timestamp,
         updatedAt: timestamp,
         state,
+        officeSource,
       });
       if (result.ok) await refreshSavedDocuments();
       else {
@@ -307,7 +311,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
       }
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [state, storageConsent, documentId, documentName, isDemo]);
+  }, [state, officeSource, storageConsent, documentId, documentName, isDemo]);
 
   const changeStorageConsent = (consent: LocalStorageConsent) => {
     if (isDemo) return;
@@ -320,6 +324,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
 
   const createDocument = () => {
     setState(createDefaultState());
+    setOfficeSource(undefined);
     setDocumentId(crypto.randomUUID());
     setDocumentName('名称未設定の履歴書');
     resetEphemeralState(true);
@@ -331,6 +336,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
     if (!result.ok) return setErrorMessage(result.error);
     if (!result.value) return setErrorMessage('保存した履歴書が見つかりません。');
     setState(result.value.state);
+    setOfficeSource(result.value.officeSource);
     setDocumentId(result.value.id);
     setDocumentName(result.value.name);
     resetEphemeralState();
@@ -391,7 +397,8 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
 
   // --- プロジェクトファイル保存・読込 ---
   const saveProject = () => {
-    const text = serializeProjectFile(state, includePhotoInProject, documentId, documentName);
+    const text = serializeProjectFile(state, includePhotoInProject, documentId, documentName,
+      includeOfficeSourceInProject ? officeSource : undefined);
     downloadTextFile('rirekisho-studio-project.json', text);
     const photoMessage = includePhotoInProject ? '写真あり' : '写真なし';
     const accommodationMessage = hasAccommodation ? '配慮事項あり' : '配慮事項なし';
@@ -403,9 +410,11 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
     event.target.value = '';
     if (!file) return;
     try {
-      const text = await file.text();
-      const project = parseProjectFileDocument(text);
+      const project = file.name.toLowerCase().endsWith('.json')
+        ? parseProjectFileDocument(await file.text())
+        : await import('./browser/officePackage').then(({ importOfficeFile }) => importOfficeFile(file));
       setState(project.state);
+      setOfficeSource(project.officeSource);
       setDocumentId(project.documentId);
       setDocumentName(project.documentName);
       resetEphemeralState();
@@ -417,6 +426,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
 
   const clearAll = () => {
     setState(createDefaultState());
+    setOfficeSource(undefined);
     resetEphemeralState(true);
     setStatusMessage('この画面上の入力内容を消去しました。');
     clearDialogRef.current?.close();
@@ -424,6 +434,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
 
   const applyDisabilityEmploymentDemo = (paperFormat: PdfPaperFormat) => {
     const demoState = createDisabilityEmploymentDemoState();
+    setOfficeSource(undefined);
     setState({
       ...demoState,
       resume: {
@@ -489,7 +500,8 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
     setErrorMessage('');
     try {
       const { downloadOfficeDocument } = await import('./browser/officeRenderer');
-      await downloadOfficeDocument(format, resume, accommodation, includeAccommodation, isDemo ? 'demo-' : '');
+      await downloadOfficeDocument(format, resume, accommodation, includeAccommodation, isDemo ? 'demo-' : '',
+        state, includePrivateDataInOffice, officeSource);
       setStatusMessage(`${format === 'docx' ? 'Word' : 'Excel'}ファイルを保存しました。`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'ファイルを生成できませんでした。');
@@ -787,6 +799,11 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
                 accommodationPageWarning={accommodationPageWarning}
                 includePhotoInProject={includePhotoInProject}
                 setIncludePhotoInProject={setIncludePhotoInProject}
+                includePrivateDataInOffice={includePrivateDataInOffice}
+                setIncludePrivateDataInOffice={setIncludePrivateDataInOffice}
+                includeOfficeSourceInProject={includeOfficeSourceInProject}
+                setIncludeOfficeSourceInProject={setIncludeOfficeSourceInProject}
+                hasOfficeSource={Boolean(officeSource)}
                 updateResumeField={updateResumeField}
                 applyDisabilityEmploymentDemo={applyDisabilityEmploymentDemo}
                 saveProject={saveProject}

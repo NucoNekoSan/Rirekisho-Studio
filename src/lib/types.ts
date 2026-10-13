@@ -114,6 +114,15 @@ export interface AppState {
   accommodation: AccommodationData;
 }
 
+/** Original Office file retained for same-format editing and export. */
+export interface OfficeSource {
+  format: 'docx' | 'xlsx';
+  base64: string;
+  paperFormat: PdfPaperFormat;
+  printedAccommodation: boolean;
+  hasPhoto: boolean;
+}
+
 /** JSON保存ファイルの構造 */
 export interface ProjectFile {
   schemaVersion: number;
@@ -124,6 +133,7 @@ export interface ProjectFile {
   includePhoto: boolean;
   includeAccommodation: boolean;
   state: AppState;
+  officeSource?: OfficeSource;
 }
 
 export interface ResumeDocumentMetadata {
@@ -135,6 +145,7 @@ export interface ResumeDocumentMetadata {
 
 export interface StoredResumeDocument extends ResumeDocumentMetadata {
   state: AppState;
+  officeSource?: OfficeSource;
 }
 
 export type LocalStorageConsent = 'memory-only' | 'device-storage';

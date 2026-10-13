@@ -1,6 +1,8 @@
 import {
   AlignmentType,
   BorderStyle,
+  BookmarkEnd,
+  BookmarkStart,
   Document,
   HeightRule,
   ImageRun,
@@ -20,6 +22,7 @@ import type { AccommodationData, ResumeData, TextAlignment } from '../lib/types'
 import type { OfficeDatedRow, OfficeExportData, OfficeField, OfficeResumePage } from '../lib/officeExportData';
 import { getTextAlignment } from '../lib/alignment';
 import { OFFICE_A4, mmToTwip } from '../lib/officeLayout';
+import { officeAnchor } from '../lib/officeAnchor';
 
 type WordChild = Paragraph | Table;
 const BORDER = { style: BorderStyle.SINGLE, size: 4, color: OFFICE_A4.borderColor };
@@ -27,11 +30,16 @@ const CELL_BORDERS = { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER 
 const ALIGN = { left: AlignmentType.LEFT, center: AlignmentType.CENTER, right: AlignmentType.RIGHT } as const;
 
 const fontName = (resume: ResumeData) => resume.pdfFontFamily === 'mincho' ? 'Yu Mincho' : 'Yu Gothic';
-const paragraph = (value: string, font: string, options: { bold?: boolean; alignment?: TextAlignment; size?: number } = {}) =>
+let bookmarkNumber = 0;
+const paragraph = (value: string, font: string, options: { bold?: boolean; alignment?: TextAlignment; size?: number; key?: string } = {}) =>
   new Paragraph({
     alignment: options.alignment ? ALIGN[options.alignment] : undefined,
     spacing: { before: 0, after: 0 },
-    children: [new TextRun({ text: value || ' ', bold: options.bold, font, size: options.size ?? 17 })],
+    children: [
+      ...(options.key ? [new BookmarkStart(officeAnchor(options.key), ++bookmarkNumber)] : []),
+      new TextRun({ text: value || ' ', bold: options.bold, font, size: options.size ?? 17 }),
+      ...(options.key ? [new BookmarkEnd(bookmarkNumber)] : []),
+    ],
   });
 const cell = (children: WordChild[], width: number, shaded = false) => new TableCell({
   width: { size: width, type: WidthType.DXA },
@@ -41,8 +49,18 @@ const cell = (children: WordChild[], width: number, shaded = false) => new Table
   children,
 });
 
-function wordLines(value: string, font: string, alignment: TextAlignment): Paragraph[] {
-  return value.split(/\r?\n/).map((line) => paragraph(line, font, { alignment }));
+function wordLines(value: string, font: string, alignment: TextAlignment, key?: string): Paragraph[] {
+  const lines = value.split(/\r?\n/);
+  if (!key || lines.length === 1) return lines.map((line) => paragraph(line, font, { alignment, key }));
+  const id = ++bookmarkNumber;
+  return lines.map((line, index) => new Paragraph({
+    alignment: ALIGN[alignment], spacing: { before: 0, after: 0 },
+    children: [
+      ...(index === 0 ? [new BookmarkStart(officeAnchor(key), id)] : []),
+      new TextRun({ text: line || ' ', font, size: 17 }),
+      ...(index === lines.length - 1 ? [new BookmarkEnd(id)] : []),
+    ],
+  }));
 }
 
 function fieldTable(fields: OfficeField[], width: number, font: string, shaded: boolean): Table {
@@ -54,7 +72,7 @@ function fieldTable(fields: OfficeField[], width: number, font: string, shaded: 
     rows: fields.map((field) => new TableRow({
       children: [
         cell([paragraph(field.label, font, { bold: true, size: 17 })], labelWidth, shaded),
-        cell(wordLines(field.value, font, field.alignment), valueWidth),
+        cell(wordLines(field.value, font, field.alignment, field.key), valueWidth),
       ],
     })),
   });
@@ -100,16 +118,16 @@ function datedTable(title: string, rows: OfficeDatedRow[], minRows: number, widt
   widths[2] = width - widths[0] - widths[1];
   const values = [...rows];
   while (values.length < minRows) values.push({
-    year: { label: '年', value: '', alignment: 'left' },
-    month: { label: '月', value: '', alignment: 'left' },
-    text: { label: '内容', value: '', alignment: 'left' },
+    year: { key: '', label: '年', value: '', alignment: 'left' },
+    month: { key: '', label: '月', value: '', alignment: 'left' },
+    text: { key: '', label: '内容', value: '', alignment: 'left' },
   });
   const tableRows = [new TableRow({ children: ['年', '月', '内容'].map((label, index) =>
     cell([paragraph(label, font, { bold: true, alignment: 'center', size: 17 })], widths[index], shaded)) })];
   for (const row of values) {
     tableRows.push(new TableRow({
       height: { value: rowHeightMm ? mmToTwip(rowHeightMm) : 280, rule: HeightRule.ATLEAST },
-      children: [row.year, row.month, row.text].map((field, index) => cell(wordLines(field.value, font, field.alignment), widths[index])),
+      children: [row.year, row.month, row.text].map((field, index) => cell(wordLines(field.value, font, field.alignment, field.key), widths[index])),
     }));
   }
   return [heading(title, font, shaded), new Table({ width: { size: width, type: WidthType.DXA }, columnWidths: widths, rows: tableRows })];
@@ -120,7 +138,7 @@ function textBox(field: OfficeField, width: number, font: string, shaded: boolea
     width: { size: width, type: WidthType.DXA },
     columnWidths: [width],
     rows: [new TableRow({ height: minBodyMm ? { value: mmToTwip(minBodyMm), rule: HeightRule.ATLEAST } : undefined,
-      children: [cell(wordLines(field.value, font, field.alignment), width)] })],
+      children: [cell(wordLines(field.value, font, field.alignment, field.key), width)] })],
   })];
 }
 
@@ -128,7 +146,7 @@ function miniGrid(fields: OfficeField[], width: number, font: string, shaded: bo
   const half = Math.floor(width / 2);
   const miniCell = (field: OfficeField, cellWidth: number) => cell([
     paragraph(field.label, font, { bold: true, size: 17 }),
-    ...wordLines(field.value, font, field.alignment),
+    ...wordLines(field.value, font, field.alignment, field.key),
   ], cellWidth, shaded);
   return new Table({
     width: { size: width, type: WidthType.DXA },
@@ -170,7 +188,7 @@ const a4Row = (children: TableCell[], heightMm: number) => new TableRow({
   height: { value: mmToTwip(heightMm), rule: HeightRule.ATLEAST }, children,
 });
 const a4Cell = (value: string, widthMm: number, font: string, options: {
-  shaded?: boolean; bold?: boolean; size?: number; alignment?: TextAlignment; span?: number;
+  shaded?: boolean; bold?: boolean; size?: number; alignment?: TextAlignment; span?: number; key?: string;
 } = {}) => new TableCell({
   width: { size: mmToTwip(widthMm), type: WidthType.DXA },
   columnSpan: options.span,
@@ -208,20 +226,20 @@ function a4Profile(data: OfficeExportData, font: string): WordChild[] {
   const columns = [18, 10, 55, 18, 21, 18, 14];
   const profileRows = [
     a4Row([a4Cell(furigana.label, 28, font, { shaded: true, span: 2 }),
-      a4Cell(furigana.value, 126, font, { span: 5 })], 8),
+      a4Cell(furigana.value, 126, font, { span: 5, key: furigana.key })], 8),
     a4Row([a4Cell(name.label, 28, font, { shaded: true, span: 2 }),
-      a4Cell(name.value, 126, font, { span: 5, size: 34 })], 18),
+      a4Cell(name.value, 126, font, { span: 5, size: 34, key: name.key })], 18),
     a4Row(gender ? [
       a4Cell(birth.label, 18, font, { shaded: true }),
-      a4Cell(birth.value, 65, font, { span: 2 }),
+      a4Cell(birth.value, 65, font, { span: 2, key: birth.key }),
       a4Cell(age.label, 18, font, { shaded: true }),
-      a4Cell(age.value, 21, font),
-      a4Cell(gender.label, 18, font, { shaded: true }), a4Cell(gender.value, 14, font),
+      a4Cell(age.value, 21, font, { key: age.key }),
+      a4Cell(gender.label, 18, font, { shaded: true }), a4Cell(gender.value, 14, font, { key: gender.key }),
     ] : [
       a4Cell(birth.label, 18, font, { shaded: true }),
-      a4Cell(birth.value, 104, font, { span: 4 }),
+      a4Cell(birth.value, 104, font, { span: 4, key: birth.key }),
       a4Cell(age.label, 18, font, { shaded: true }),
-      a4Cell(age.value, 14, font),
+      a4Cell(age.value, 14, font, { key: age.key }),
     ], 14),
   ];
   const profile = new Table({ width: { size: mmToTwip(154), type: WidthType.DXA },
@@ -242,11 +260,11 @@ function a4Profile(data: OfficeExportData, font: string): WordChild[] {
   const contact = new Table({ width: { size: a4Width, type: WidthType.DXA },
     columnWidths: [28, 66, 28, 66].map(mmToTwip),
     rows: [
-      a4Row([a4Cell(address.label, 28, font, { shaded: true }), a4Cell(address.value, 160, font, { span: 3 })], OFFICE_A4.contactRowHeight),
-      a4Row([a4Cell(phone.label, 28, font, { shaded: true }), a4Cell(phone.value, 66, font),
-        a4Cell(email.label, 28, font, { shaded: true }), a4Cell(email.value, 66, font)], OFFICE_A4.contactRowHeight),
-      a4Row([a4Cell(contactAddress.label, 28, font, { shaded: true }), a4Cell(contactAddress.value, 160, font, { span: 3 })], OFFICE_A4.contactRowHeight),
-      a4Row([a4Cell(contactPhone.label, 28, font, { shaded: true }), a4Cell(contactPhone.value, 160, font, { span: 3 })], OFFICE_A4.contactRowHeight),
+      a4Row([a4Cell(address.label, 28, font, { shaded: true }), a4Cell(address.value, 160, font, { span: 3, key: address.key })], OFFICE_A4.contactRowHeight),
+      a4Row([a4Cell(phone.label, 28, font, { shaded: true }), a4Cell(phone.value, 66, font, { key: phone.key }),
+        a4Cell(email.label, 28, font, { shaded: true }), a4Cell(email.value, 66, font, { key: email.key })], OFFICE_A4.contactRowHeight),
+      a4Row([a4Cell(contactAddress.label, 28, font, { shaded: true }), a4Cell(contactAddress.value, 160, font, { span: 3, key: contactAddress.key })], OFFICE_A4.contactRowHeight),
+      a4Row([a4Cell(contactPhone.label, 28, font, { shaded: true }), a4Cell(contactPhone.value, 160, font, { span: 3, key: contactPhone.key })], OFFICE_A4.contactRowHeight),
     ],
   });
   return [outer, a4Gap(7), contact, a4Gap(7)];
@@ -255,9 +273,9 @@ function a4Profile(data: OfficeExportData, font: string): WordChild[] {
 function a4Dated(title: string, rows: OfficeDatedRow[], minRows: number, font: string, qualification = false): Table {
   const values = [...rows];
   while (values.length < minRows) values.push({
-    year: { label: '年', value: '', alignment: 'left' },
-    month: { label: '月', value: '', alignment: 'left' },
-    text: { label: '内容', value: '', alignment: 'left' },
+    year: { key: '', label: '年', value: '', alignment: 'left' },
+    month: { key: '', label: '月', value: '', alignment: 'left' },
+    text: { key: '', label: '内容', value: '', alignment: 'left' },
   });
   const rowHeight = qualification ? OFFICE_A4.qualificationRowHeight
     : minRows >= 21 ? OFFICE_A4.historyRowHeight - 0.22 : OFFICE_A4.historyRowHeight;
@@ -268,9 +286,9 @@ function a4Dated(title: string, rows: OfficeDatedRow[], minRows: number, font: s
       a4Row([a4Cell('年', 18, font, { alignment: 'center' }), a4Cell('月', 14, font, { alignment: 'center' }),
         a4Cell('内容', 156, font, { alignment: 'center' })], OFFICE_A4.historyHeaderHeight),
       ...values.map((entry) => a4Row([
-        a4Cell(entry.year.value, 18, font, { alignment: entry.year.alignment }),
-        a4Cell(entry.month.value, 14, font, { alignment: entry.month.alignment }),
-        a4Cell(entry.text.value, 156, font, { alignment: entry.text.alignment }),
+        a4Cell(entry.year.value, 18, font, { alignment: entry.year.alignment, key: entry.year.key }),
+        a4Cell(entry.month.value, 14, font, { alignment: entry.month.alignment, key: entry.month.key }),
+        a4Cell(entry.text.value, 156, font, { alignment: entry.text.alignment, key: entry.text.key }),
       ], rowHeight)),
     ],
   });
@@ -282,7 +300,7 @@ function a4Text(field: OfficeField, font: string, heightMm: number): Table {
       new TableRow({ height: { value: mmToTwip(heightMm - OFFICE_A4.textHeadingHeight), rule: HeightRule.ATLEAST },
         children: [new TableCell({ width: { size: a4Width, type: WidthType.DXA }, borders: CELL_BORDERS,
           margins: { top: mmToTwip(2), bottom: 0, left: mmToTwip(2), right: mmToTwip(2) },
-          children: wordLines(field.value, font, field.alignment) })] })],
+          children: wordLines(field.value, font, field.alignment, field.key) })] })],
   });
 }
 
@@ -290,8 +308,8 @@ function a4Mini(fields: OfficeField[], font: string): Table {
   return new Table({ width: { size: a4Width, type: WidthType.DXA }, columnWidths: [94, 94].map(mmToTwip),
     rows: [0, 2].flatMap((start) => [
       a4Row([a4Cell(fields[start].label, 94, font, { shaded: true }), a4Cell(fields[start + 1].label, 94, font, { shaded: true })], 4),
-      a4Row([a4Cell(fields[start].value, 94, font, { alignment: fields[start].alignment }),
-        a4Cell(fields[start + 1].value, 94, font, { alignment: fields[start + 1].alignment })], 7.5),
+      a4Row([a4Cell(fields[start].value, 94, font, { alignment: fields[start].alignment, key: fields[start].key }),
+        a4Cell(fields[start + 1].value, 94, font, { alignment: fields[start + 1].alignment, key: fields[start + 1].key })], 7.5),
     ]),
   });
 }
@@ -361,6 +379,7 @@ function accommodationSection(data: OfficeExportData, resume: ResumeData, accomm
   for (const section of page.sections) {
     if (section.type === 'empty') children.push(paragraph('出力対象の項目がありません。', font));
     else children.push(...textBox({
+      key: section.continued ? '' : section.fieldKey,
       label: `${section.label}${section.continued ? '（続き）' : ''}`,
       value: section.value,
       alignment: getTextAlignment(accommodation.textAlignments, section.fieldKey),
@@ -373,6 +392,7 @@ function accommodationSection(data: OfficeExportData, resume: ResumeData, accomm
 }
 
 export async function createWordDocument(data: OfficeExportData, resume: ResumeData, accommodation: AccommodationData): Promise<Blob> {
+  bookmarkNumber = 0;
   const sections = data.pages.map((page) => resumeSection(page, data, resume));
   data.accommodationPages?.forEach((_, index) => sections.push(accommodationSection(data, resume, accommodation, index)));
   return Packer.toBlob(new Document({ sections }));

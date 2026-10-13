@@ -3,6 +3,7 @@ import { getTextAlignment } from '../lib/alignment';
 import type { AccommodationData, ResumeData, TextAlignment } from '../lib/types';
 import type { OfficeDatedRow, OfficeExportData, OfficeField, OfficeResumePage } from '../lib/officeExportData';
 import { OFFICE_A4, mmToPoints } from '../lib/officeLayout';
+import { officeAnchor } from '../lib/officeAnchor';
 
 const BORDER: Partial<ExcelJS.Borders> = {
   top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' },
@@ -16,10 +17,12 @@ function put(sheet: ExcelJS.Worksheet, row: number, first: number, last: number,
   bold?: boolean;
   alignment?: TextAlignment;
   size?: number;
+  key?: string;
 }): void {
   if (last > first) sheet.mergeCells(row, first, row, last);
   const anchor = sheet.getCell(row, first);
   anchor.value = value;
+  if (options.key) anchor.addName(officeAnchor(options.key));
   anchor.numFmt = '@';
   anchor.font = { name: options.font, size: options.size ?? 10, bold: options.bold };
   anchor.alignment = { horizontal: options.alignment ?? 'left', vertical: 'middle', wrapText: true };
@@ -43,7 +46,7 @@ function title(sheet: ExcelJS.Worksheet, left: number, name: string, date: strin
 
 function field(sheet: ExcelJS.Worksheet, row: number, first: number, last: number, value: OfficeField, font: string, shaded: boolean): void {
   put(sheet, row, first, first + 1, value.label, { font, shaded, bold: true, size: 9 });
-  put(sheet, row, first + 2, last, value.value, { font, alignment: value.alignment });
+  put(sheet, row, first + 2, last, value.value, { font, alignment: value.alignment, key: value.key });
   sheet.getRow(row).height = Math.max(sheet.getRow(row).height ?? 0, 25);
 }
 
@@ -53,19 +56,19 @@ function profile(sheet: ExcelJS.Worksheet, start: number, data: OfficeExportData
     const gender = data.profile.find((item) => item.label === '性別');
     for (const [row, item] of [[3, furigana], [4, name]] as const) {
       put(sheet, row, start, start + 1, item.label, { font, shaded, size: 9 });
-      put(sheet, row, start + 2, start + 7, item.value, { font, alignment: item.alignment, size: row === 4 ? 17 : 10 });
+      put(sheet, row, start + 2, start + 7, item.value, { font, alignment: item.alignment, size: row === 4 ? 17 : 10, key: item.key });
     }
     put(sheet, 5, start, start, birthDate.label, { font, shaded, size: 9 });
     if (gender) {
-      put(sheet, 5, start + 1, start + 3, birthDate.value, { font, alignment: birthDate.alignment });
+      put(sheet, 5, start + 1, start + 3, birthDate.value, { font, alignment: birthDate.alignment, key: birthDate.key });
       put(sheet, 5, start + 4, start + 4, age.label, { font, shaded, size: 9 });
-      put(sheet, 5, start + 5, start + 5, age.value, { font, alignment: age.alignment });
+      put(sheet, 5, start + 5, start + 5, age.value, { font, alignment: age.alignment, key: age.key });
       put(sheet, 5, start + 6, start + 6, gender.label, { font, shaded, size: 9 });
-      put(sheet, 5, start + 7, start + 7, gender.value, { font, alignment: gender.alignment });
+      put(sheet, 5, start + 7, start + 7, gender.value, { font, alignment: gender.alignment, key: gender.key });
     } else {
-      put(sheet, 5, start + 1, start + 5, birthDate.value, { font, alignment: birthDate.alignment });
+      put(sheet, 5, start + 1, start + 5, birthDate.value, { font, alignment: birthDate.alignment, key: birthDate.key });
       put(sheet, 5, start + 6, start + 6, age.label, { font, shaded, size: 9 });
-      put(sheet, 5, start + 7, start + 7, age.value, { font, alignment: age.alignment });
+      put(sheet, 5, start + 7, start + 7, age.value, { font, alignment: age.alignment, key: age.key });
     }
     sheet.getRow(3).height = mmToPoints(8);
     sheet.getRow(4).height = mmToPoints(21);
@@ -85,9 +88,9 @@ function profile(sheet: ExcelJS.Worksheet, start: number, data: OfficeExportData
     }
     field(sheet, 7, start, start + 9, data.contact[0], font, shaded);
     put(sheet, 8, start, start + 1, data.contact[1].label, { font, shaded, size: 9 });
-    put(sheet, 8, start + 2, start + 4, data.contact[1].value, { font });
+    put(sheet, 8, start + 2, start + 4, data.contact[1].value, { font, key: data.contact[1].key });
     put(sheet, 8, start + 5, start + 6, data.contact[2].label, { font, shaded, size: 9 });
-    put(sheet, 8, start + 7, start + 9, data.contact[2].value, { font });
+    put(sheet, 8, start + 7, start + 9, data.contact[2].value, { font, key: data.contact[2].key });
     field(sheet, 9, start, start + 9, data.contact[3], font, shaded);
     field(sheet, 10, start, start + 9, data.contact[4], font, shaded);
     for (let row = 7; row <= 10; row += 1) sheet.getRow(row).height = mmToPoints(10);
@@ -100,10 +103,10 @@ function profile(sheet: ExcelJS.Worksheet, start: number, data: OfficeExportData
   field(sheet, 4, start, start + 5, name, font, shaded);
   field(sheet, 5, start, start + 5, birthDate, font, shaded);
   put(sheet, 6, start, start + 1, age.label, { font, shaded, bold: true, size: 9 });
-  put(sheet, 6, start + 2, start + 3, age.value, { font, alignment: age.alignment });
+  put(sheet, 6, start + 2, start + 3, age.value, { font, alignment: age.alignment, key: age.key });
   if (gender) {
     put(sheet, 6, start + 4, start + 5, gender.label, { font, shaded, bold: true, size: 9 });
-    put(sheet, 6, start + 6, start + 7, gender.value, { font, alignment: gender.alignment });
+    put(sheet, 6, start + 6, start + 7, gender.value, { font, alignment: gender.alignment, key: gender.key });
   } else {
     put(sheet, 6, start + 4, start + 7, '', { font });
   }
@@ -122,9 +125,9 @@ function profile(sheet: ExcelJS.Worksheet, start: number, data: OfficeExportData
   }
   field(sheet, 7, start, start + 7, data.contact[0], font, shaded);
   put(sheet, 8, start, start + 1, data.contact[1].label, { font, shaded, bold: true, size: 9 });
-  put(sheet, 8, start + 2, start + 3, data.contact[1].value, { font });
+  put(sheet, 8, start + 2, start + 3, data.contact[1].value, { font, key: data.contact[1].key });
   put(sheet, 8, start + 4, start + 5, data.contact[2].label, { font, shaded, bold: true, size: 9 });
-  put(sheet, 8, start + 6, start + 7, data.contact[2].value, { font });
+  put(sheet, 8, start + 6, start + 7, data.contact[2].value, { font, key: data.contact[2].key });
   sheet.getRow(8).height = 25;
   field(sheet, 9, start, start + 7, data.contact[3], font, shaded);
   field(sheet, 10, start, start + 7, data.contact[4], font, shaded);
@@ -143,9 +146,9 @@ function history(sheet: ExcelJS.Worksheet, startRow: number, startCol: number, t
   let rowNumber = startRow + 2;
   for (let index = 0; index < Math.max(minRows, rows.length); index += 1) {
     const dated = rows[index];
-    put(sheet, rowNumber, startCol, startCol, dated?.year.value ?? '', { font, alignment: dated?.year.alignment });
-    put(sheet, rowNumber, startCol + 1, startCol + 1, dated?.month.value ?? '', { font, alignment: dated?.month.alignment });
-    put(sheet, rowNumber, startCol + 2, lastCol, dated?.text.value ?? '', { font, alignment: dated?.text.alignment });
+    put(sheet, rowNumber, startCol, startCol, dated?.year.value ?? '', { font, alignment: dated?.year.alignment, key: dated?.year.key });
+    put(sheet, rowNumber, startCol + 1, startCol + 1, dated?.month.value ?? '', { font, alignment: dated?.month.alignment, key: dated?.month.key });
+    put(sheet, rowNumber, startCol + 2, lastCol, dated?.text.value ?? '', { font, alignment: dated?.text.alignment, key: dated?.text.key });
     const baseHeight = span === 10
       ? mmToPoints((qualification ? OFFICE_A4.qualificationRowHeight * 1.16 : OFFICE_A4.historyRowHeight * 1.13))
       : Math.max(sheet.getRow(rowNumber).height ?? 0, 21);
@@ -163,7 +166,7 @@ function textBox(sheet: ExcelJS.Worksheet, row: number, start: number, value: Of
   let bodyRow = row + 1;
   for (const [index, chunk] of chunks.entries()) {
     if (index > 0) put(sheet, bodyRow++, start, start + 7, `${value.label}（続き）`, { font, bold: true, shaded });
-    put(sheet, bodyRow, start, start + 7, chunk, { font, alignment: value.alignment });
+    put(sheet, bodyRow, start, start + 7, chunk, { font, alignment: value.alignment, key: index === 0 ? value.key : undefined });
     const lineCount = chunk.split(/\r?\n/).reduce((total, line) => total + Math.max(1, Math.ceil(Array.from(line).length / 25)), 0);
     sheet.getRow(bodyRow).height = Math.min(380, Math.max(40, (lineCount + 1) * 15));
     bodyRow += 1;
@@ -173,7 +176,7 @@ function textBox(sheet: ExcelJS.Worksheet, row: number, start: number, value: Of
 
 function a4TextBox(sheet: ExcelJS.Worksheet, row: number, value: OfficeField, font: string, heightMm: number): number {
   put(sheet, row, 1, 10, value.label, { font, shaded: true });
-  put(sheet, row + 1, 1, 10, value.value, { font, alignment: value.alignment, size: 9 });
+  put(sheet, row + 1, 1, 10, value.value, { font, alignment: value.alignment, size: 9, key: value.key });
   sheet.getRow(row).height = mmToPoints(OFFICE_A4.textHeadingHeight);
   const lines = value.value.split(/\r?\n/).reduce((count, line) => count + Math.max(1, Math.ceil(Array.from(line).length / 38)), 0);
   sheet.getRow(row + 1).height = Math.max(mmToPoints(heightMm - OFFICE_A4.textHeadingHeight), (lines + 1) * 13);
@@ -194,8 +197,8 @@ function a4Details(sheet: ExcelJS.Worksheet, data: OfficeExportData, font: strin
     put(sheet, row, 1, 5, data.mini[index].label, { font, shaded: true });
     put(sheet, row, 6, 10, data.mini[index + 1].label, { font, shaded: true });
     sheet.getRow(row++).height = mmToPoints(4);
-    put(sheet, row, 1, 5, data.mini[index].value, { font, alignment: data.mini[index].alignment });
-    put(sheet, row, 6, 10, data.mini[index + 1].value, { font, alignment: data.mini[index + 1].alignment });
+    put(sheet, row, 1, 5, data.mini[index].value, { font, alignment: data.mini[index].alignment, key: data.mini[index].key });
+    put(sheet, row, 6, 10, data.mini[index + 1].value, { font, alignment: data.mini[index + 1].alignment, key: data.mini[index + 1].key });
     sheet.getRow(row++).height = mmToPoints(11);
   }
   return row;
@@ -208,6 +211,7 @@ function a3TextBox(sheet: ExcelJS.Worksheet, headingRow: number, bodyRows: numbe
   sheet.mergeCells(firstBodyRow, 10, lastBodyRow, 17);
   const anchor = sheet.getCell(firstBodyRow, 10);
   anchor.value = field.value;
+  anchor.addName(officeAnchor(field.key));
   anchor.numFmt = '@';
   anchor.font = { name: font, size: 8 };
   anchor.alignment = { horizontal: field.alignment, vertical: 'top', wrapText: true };
@@ -226,8 +230,8 @@ function a3Details(sheet: ExcelJS.Worksheet, data: OfficeExportData, font: strin
   for (let index = 0; index < 4; index += 2) {
     put(sheet, row, 10, 13, data.mini[index].label, { font, size: 8 });
     put(sheet, row, 14, 17, data.mini[index + 1].label, { font, size: 8 });
-    put(sheet, row + 1, 10, 13, data.mini[index].value, { font, size: 8, alignment: data.mini[index].alignment });
-    put(sheet, row + 1, 14, 17, data.mini[index + 1].value, { font, size: 8, alignment: data.mini[index + 1].alignment });
+    put(sheet, row + 1, 10, 13, data.mini[index].value, { font, size: 8, alignment: data.mini[index].alignment, key: data.mini[index].key });
+    put(sheet, row + 1, 14, 17, data.mini[index + 1].value, { font, size: 8, alignment: data.mini[index + 1].alignment, key: data.mini[index + 1].key });
     row += 2;
   }
   return row;
@@ -300,6 +304,7 @@ function accommodationSheets(workbook: ExcelJS.Workbook, data: OfficeExportData,
     for (const section of page.sections) {
       if (section.type === 'empty') put(sheet, row++, 1, 8, '出力対象の項目がありません。', { font });
       else row = textBox(sheet, row, 1, {
+        key: section.continued ? '' : section.fieldKey,
         label: `${section.label}${section.continued ? '（続き）' : ''}`,
         value: section.value,
         alignment: getTextAlignment(accommodation.textAlignments, section.fieldKey),
