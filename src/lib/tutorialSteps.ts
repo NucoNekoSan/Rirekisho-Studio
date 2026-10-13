@@ -9,5 +9,5 @@ export const demoTutorialSteps: readonly TutorialStep[] = [
   { target: 'license', title: '免許・資格を編集する', description: '資格名や取得年月を書き換え、必要なら行を追加してみてください。' },
   { target: 'appeal', title: '文章を編集する', description: '志望動機や自己PRを編集します。「大きく編集」も試せます。作業メモは出力に含まれません。' },
   { target: 'preview-panel', title: '仕上がり見本を操作する', description: '全体表示・拡大表示を切り替え、入力した内容と用紙への収まりを確認してください。' },
-  { target: 'output', title: 'デモのファイルを保存する', description: '用紙形式を切り替え、仕上がり見本の書き出しからPDF・Word・Excelを保存できます。ファイル名にはdemo-が付きます。' },
+  { target: 'output', title: 'デモのファイルを保存する', description: '用紙形式を切り替え、仕上がり見本の書き出しからPDF・Word・Excelを保存できます。ファイル名にはdemo-が付きます。実際の編集画面では、保存したWord・Excelを編集して「入力データを読込」から読み込むと、変更した文字や写真、追加した行が自動で反映されます。' },
 ];
