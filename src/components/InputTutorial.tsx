@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react';
 import type { TutorialStep } from '../lib/tutorialSteps';
 
-export function InputTutorial({ index, steps, demo = false, onPrevious, onNext, onClose }: {
+export function InputTutorial({ index, steps, onPrevious, onNext, onClose }: {
   index: number;
   steps: readonly TutorialStep[];
-  demo?: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onClose: () => void;
@@ -26,10 +25,10 @@ export function InputTutorial({ index, steps, demo = false, onPrevious, onNext, 
 
   return (
     <section className="input-tutorial" id="input-tutorial" aria-labelledby="tutorial-step-title">
-      <p className="input-tutorial-progress">{demo ? '操作デモ' : 'チュートリアル'} {index + 1} / {steps.length}</p>
+      <p className="input-tutorial-progress">操作デモ {index + 1} / {steps.length}</p>
       <h2 id="tutorial-step-title" ref={titleRef} tabIndex={-1}>{step.title}</h2>
       <p>{step.description}</p>
-      <p className="input-tutorial-note">{demo ? '操作は自由です。練習内容は端末内の履歴書に保存されません。' : 'この案内は入力内容を変更しません。'}いつでも終了できます。</p>
+      <p className="input-tutorial-note">操作は自由です。練習内容は端末内の履歴書に保存されません。いつでも終了できます。</p>
       <div className="input-tutorial-actions">
         <button type="button" className="secondary compact-button" onClick={focusTarget}>操作箇所へ移動</button>
         <button type="button" className="secondary compact-button" onClick={onPrevious} disabled={index === 0}>前へ</button>

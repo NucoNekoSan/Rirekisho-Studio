@@ -48,26 +48,14 @@ describe('App accessibility labels', () => {
     }
   }, 15_000);
 
-  it('starts with a school history heading and guides input only on request', () => {
+  it('starts with a school history heading without a redundant tutorial', () => {
     render(<App />);
 
     expect(screen.getByLabelText('学歴・職歴1行目の内容')).toHaveValue('学歴');
     expect(screen.getByLabelText('学歴・職歴1行目の年')).toHaveValue('');
-    expect(screen.queryByText('チュートリアル 1 / 7')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'チュートリアルを始める' }));
-    expect(screen.getByText('チュートリアル 1 / 7')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '基本情報を入力する' })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: '次へ' }));
-    expect(screen.getByRole('heading', { name: '写真を選ぶ' })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: '前へ' }));
-    expect(screen.getByRole('heading', { name: '基本情報を入力する' })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: '終了' }));
-    expect(screen.queryByText('チュートリアル 1 / 7')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('学歴・職歴1行目の内容')).toHaveValue('学歴');
-    fireEvent.click(screen.getByRole('button', { name: 'チュートリアルを始める' }));
-    expect(screen.getByText('チュートリアル 1 / 7')).toBeInTheDocument();
-  }, 15_000);
+    expect(screen.queryByRole('button', { name: 'チュートリアルを始める' })).not.toBeInTheDocument();
+    expect(document.querySelector('.input-tutorial')).not.toBeInTheDocument();
+  });
 
   it('provides a skip link to the main workspace', () => {
     render(<App />);

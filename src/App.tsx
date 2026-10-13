@@ -4,7 +4,7 @@ import type { ChangeEvent } from 'react';
 import './App.css';
 import { EditableRows } from './components/EditableRows';
 import { InputTutorial } from './components/InputTutorial';
-import { demoTutorialSteps, tutorialSteps, type TutorialTarget } from './lib/tutorialSteps';
+import { demoTutorialSteps, type TutorialTarget } from './lib/tutorialSteps';
 import { DocumentManager } from './components/DocumentManager';
 import { FormSection, TextField, TextArea, SelectField, ToggleText } from './components/FormFields';
 import { OutputPanel } from './components/OutputPanel';
@@ -61,7 +61,6 @@ const appealLengthError = (label: string, value: string) => (
 
 function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
   const isDemo = mode === 'demo';
-  const activeTutorialSteps = isDemo ? demoTutorialSteps : tutorialSteps;
   // --- アプリケーション状態 ---
   const {
     state,
@@ -256,8 +255,8 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
   };
 
   const tutorialAt = (target: TutorialTarget) => {
-    if (tutorialIndex === null || activeTutorialSteps[tutorialIndex].target !== target) return null;
-    return <InputTutorial index={tutorialIndex} steps={activeTutorialSteps} demo={isDemo} onPrevious={() => setTutorialIndex((current) => current === null ? null : current - 1)} onNext={() => setTutorialIndex((current) => current === null ? null : current + 1)} onClose={closeTutorial} />;
+    if (!isDemo || tutorialIndex === null || demoTutorialSteps[tutorialIndex].target !== target) return null;
+    return <InputTutorial index={tutorialIndex} steps={demoTutorialSteps} onPrevious={() => setTutorialIndex((current) => current === null ? null : current - 1)} onNext={() => setTutorialIndex((current) => current === null ? null : current + 1)} onClose={closeTutorial} />;
   };
 
   const restartDemo = () => {
@@ -558,7 +557,7 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
             <p>必要な場合だけ、履歴書とは別の追加書類として作成できます。</p>
           </section>
 
-          <button
+          {isDemo ? <button
             type="button"
             className="secondary tutorial-start-button"
             ref={tutorialStartRef}
@@ -566,8 +565,8 @@ function App({ mode = 'normal' }: { mode?: 'normal' | 'demo' }) {
             aria-expanded={tutorialIndex !== null}
             aria-controls="input-tutorial"
           >
-            {tutorialIndex === null ? (isDemo ? '操作案内を始める' : 'チュートリアルを始める') : (isDemo ? '操作案内を最初から見る' : 'チュートリアルを最初から見る')}
-          </button>
+            {tutorialIndex === null ? '操作案内を始める' : '操作案内を最初から見る'}
+          </button> : null}
 
           {!isDemo ? <DocumentManager
             consent={storageConsent}
