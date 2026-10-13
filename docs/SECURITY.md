@@ -25,6 +25,7 @@
 - Office原本をJSONに同梱する場合、写真の包含チェックとは独立して原本の写真・非表示情報が残ることを説明する。
 - 配備CSPはインラインスクリプト、外部フレーム、オブジェクト埋め込み、基底URL変更、外部フォーム送信を許可しない。
 - PDF表示用として同一オリジンとBlobのフレームだけを許可する。
+- `script-src`・`connect-src`はCloudflareの計測ビーコン(`static.cloudflareinsights.com`/`cloudflareinsights.com`)のみを個別に許可し、利用者の入力内容を送信しない。
 
 ## 共有PC運用
 
